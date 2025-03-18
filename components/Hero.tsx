@@ -51,10 +51,13 @@ export default function Hero() {
               />
               <div class="space-y-6">
                 <p class="text-xl text-[#F8F6F0]/90 font-light leading-relaxed">
-                  According to Silicon Valley folklore, some early stage startups have reported encountering what can only be described as the "DATA_GATA" - a rare creature evolved in environments where bootstrapped startups sold data-products before they were truly ready.
+                  According to Silicon Valley folklore, some early stage start-ups have reported to have encountered what can only be described as the "DATA_GATA". 
                 </p>
                 <p class="text-xl text-[#F8F6F0]/90 font-light leading-relaxed">
-                  This once ambitious data engineer transformed into a half-data, half-gator hybrid that specializes in extracting teams from the swamp of messy data and guiding them to the promised land of clean, reliable data platforms.
+                  It is rumored that this mysterious creature evolved from the sales team of a bootstrapped start-up that sold data-products that did not exist to raise capital.
+                </p>
+                <p class="text-xl text-[#F8F6F0]/90 font-light leading-relaxed">
+                  In this environment, this once young ambitious college dropout rose from cold calling to building data products and now dedicates his career to helping others avoid adopting a data-swamp in the pursuit of a single source of truth.
                 </p>
               </div>
             </div>
