@@ -4,22 +4,38 @@
 
 import * as $_404 from "./routes/_404.tsx";
 import * as $_app from "./routes/_app.tsx";
+import * as $_middleware from "./routes/_middleware.ts";
+import * as $admin_middleware from "./routes/admin/_middleware.ts";
+import * as $admin_contacts from "./routes/admin/contacts.tsx";
+import * as $admin_login from "./routes/admin/login.tsx";
+import * as $admin_logout from "./routes/admin/logout.ts";
+import * as $api_contact from "./routes/api/contact.ts";
+import * as $api_contact_id_ from "./routes/api/contact/[id].tsx";
+import * as $api_visitor from "./routes/api/visitor.ts";
 import * as $index from "./routes/index.tsx";
 import * as $ContactForm from "./islands/ContactForm.tsx";
-import * as $MobileMenu from "./islands/MobileMenu.tsx";
 import * as $ScrollToTop from "./islands/ScrollToTop.tsx";
+import * as $ScrollingMenu from "./islands/ScrollingMenu.tsx";
 import { type Manifest } from "$fresh/server.ts";
 
 const manifest = {
   routes: {
     "./routes/_404.tsx": $_404,
     "./routes/_app.tsx": $_app,
+    "./routes/_middleware.ts": $_middleware,
+    "./routes/admin/_middleware.ts": $admin_middleware,
+    "./routes/admin/contacts.tsx": $admin_contacts,
+    "./routes/admin/login.tsx": $admin_login,
+    "./routes/admin/logout.ts": $admin_logout,
+    "./routes/api/contact.ts": $api_contact,
+    "./routes/api/contact/[id].tsx": $api_contact_id_,
+    "./routes/api/visitor.ts": $api_visitor,
     "./routes/index.tsx": $index,
   },
   islands: {
     "./islands/ContactForm.tsx": $ContactForm,
-    "./islands/MobileMenu.tsx": $MobileMenu,
     "./islands/ScrollToTop.tsx": $ScrollToTop,
+    "./islands/ScrollingMenu.tsx": $ScrollingMenu,
   },
   baseUrl: import.meta.url,
 } satisfies Manifest;

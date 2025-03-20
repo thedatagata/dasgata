@@ -1,5 +1,5 @@
-// components/Nav.tsx
-import MobileMenu from "../islands/MobileMenu.tsx";
+// Updated to use ScrollingMenu instead of MobileMenu
+import ScrollingMenu from "../islands/ScrollingMenu.tsx";
 
 export default function Nav() {
   return (
@@ -42,8 +42,8 @@ export default function Nav() {
             </a>
           </div>
 
-          {/* Mobile Menu - Using an island for interactivity */}
-          <MobileMenu />
+          {/* Updated: Mobile Menu - Using ScrollingMenu island for interactivity */}
+          <ScrollingMenu />
         </div>
       </div>
     </nav>

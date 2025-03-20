@@ -1,11 +1,10 @@
-// islands/ContactForm.tsx
-import { useState } from "preact/hooks";
+import { useState, useEffect } from "preact/hooks";
 
 export default function ContactForm() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    service: "data-architecture",
+    service: "data-architecture", // Default service selection
     message: "",
   });
   
@@ -13,9 +12,8 @@ export default function ContactForm() {
     submitted: false,
     success: false,
     message: "",
+    isSubmitting: false
   });
-
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e: Event) => {
     const target = e.target as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
@@ -27,37 +25,69 @@ export default function ContactForm() {
 
   const handleSubmit = async (e: Event) => {
     e.preventDefault();
-    setIsSubmitting(true);
+    setFormStatus({
+      ...formStatus,
+      isSubmitting: true
+    });
     
-    // For demo purposes, we're just simulating a successful submission
-    // In a real implementation, you would submit to a backend API
-    try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      
-      // Success state
-      setFormStatus({
-        submitted: true,
-        success: true,
-        message: "Thank you for your message! We'll get back to you shortly.",
-      });
-      
-      // Reset form data
-      setFormData({
-        name: "",
-        email: "",
-        service: "data-architecture",
-        message: "",
-      });
-    } catch (error) {
-      // Error state
+    // Validate form data
+    if (!formData.name || !formData.email || !formData.message) {
       setFormStatus({
         submitted: true,
         success: false,
-        message: "There was an error submitting your message. Please try again.",
+        message: "Please fill out all required fields.",
+        isSubmitting: false
       });
-    } finally {
-      setIsSubmitting(false);
+      return;
+    }
+    
+    try {
+      // Submit to our new API endpoint
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+      
+      const result = await response.json();
+      
+      if (response.ok && result.success) {
+        // Success response
+        setFormStatus({
+          submitted: true,
+          success: true,
+          message: "Thank you for your message! We'll get back to you shortly.",
+          isSubmitting: false
+        });
+  
+        
+        // Reset form data
+        setFormData({
+          name: "",
+          email: "",
+          service: "data-architecture",
+          message: "",
+        });
+      } else {
+        // Error response from server
+        setFormStatus({
+          submitted: true,
+          success: false,
+          message: result.error || "There was an error submitting your message. Please try again.",
+          isSubmitting: false
+        });
+      }
+    } catch (error) {
+      // Network or other error
+      console.error("Error submitting form:", error);
+      setFormStatus({
+        submitted: true,
+        success: false,
+        message: "There was an error connecting to the server. Please try again later.",
+        isSubmitting: false
+      });
     }
   };
 
@@ -86,7 +116,7 @@ export default function ContactForm() {
             required
             class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#90C137] focus:border-[#90C137]"
             placeholder="John Doe"
-            disabled={isSubmitting}
+            disabled={formStatus.isSubmitting}
           />
         </div>
         <div>
@@ -99,7 +129,7 @@ export default function ContactForm() {
             required
             class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#90C137] focus:border-[#90C137]"
             placeholder="john@example.com"
-            disabled={isSubmitting}
+            disabled={formStatus.isSubmitting}
           />
         </div>
         <div>
@@ -109,7 +139,7 @@ export default function ContactForm() {
             value={formData.service}
             onChange={handleChange}
             class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#90C137] focus:border-[#90C137]"
-            disabled={isSubmitting}
+            disabled={formStatus.isSubmitting}
           >
             <option value="data-architecture">Data Architecture</option>
             <option value="analytics-engineering">Analytics Engineering</option>
@@ -127,19 +157,19 @@ export default function ContactForm() {
             rows={4}
             class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#90C137] focus:border-[#90C137]"
             placeholder="Tell us about your project or questions..."
-            disabled={isSubmitting}
+            disabled={formStatus.isSubmitting}
           ></textarea>
         </div>
         <button
           type="submit"
           class={`w-full py-2 px-4 rounded-md ${
-            isSubmitting 
+            formStatus.isSubmitting 
               ? "bg-gray-400 cursor-not-allowed" 
               : "bg-[#90C137] hover:bg-[#7dab2a]"
           } text-white transition-colors`}
-          disabled={isSubmitting}
+          disabled={formStatus.isSubmitting}
         >
-          {isSubmitting ? "Sending..." : "Send Message"}
+          {formStatus.isSubmitting ? "Sending..." : "Send Message"}
         </button>
       </form>
     </div>

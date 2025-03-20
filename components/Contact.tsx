@@ -1,4 +1,3 @@
-// components/Contact.tsx
 import ContactForm from "../islands/ContactForm.tsx";
 
 export default function Contact() {
@@ -98,7 +97,7 @@ export default function Contact() {
             </div>
           </div>
           
-          {/* Contact Form Island */}
+          {/* Updated ContactForm Island Component */}
           <ContactForm />
         </div>
       </div>

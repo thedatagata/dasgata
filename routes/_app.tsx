@@ -1,11 +1,12 @@
 // routes/_app.tsx
 import { PageProps } from "$fresh/server.ts";
+import { Head } from "$fresh/runtime.ts";
 import ScrollToTop from "../islands/ScrollToTop.tsx";
 
 export default function App({ Component }: PageProps) {
   return (
-    <html lang="en">
-      <head>
+    <>
+      <Head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>DATA_GATA | Modern Data Architecture</title>
@@ -16,11 +17,11 @@ export default function App({ Component }: PageProps) {
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
         <link rel="stylesheet" href="/styles.css" />
-      </head>
-      <body class="font-sans text-gray-900 bg-[#F8F6F0] min-h-screen flex flex-col">
+      </Head>
+      <div class="font-sans text-gray-900 bg-[#F8F6F0] min-h-screen flex flex-col">
         <Component />
         <ScrollToTop />
-      </body>
-    </html>
+      </div>
+    </>
   );
 }
