@@ -1,7 +1,19 @@
 // utils/config.ts
 
-// Auto-load environment variables
-import "@std/dotenv/load";
+// Updated dotenv import for Deno v2.2.4
+import { load } from "@std/dotenv/mod.ts";
+
+// Load environment variables
+try {
+  const result = await load({
+    export: true,
+    allowEmptyValues: true
+  });
+  console.log("Loaded environment variables:", Object.keys(result).join(", "));
+} catch (err) {
+  console.log("No .env file found or error loading it:", err.message);
+  console.log("Using default environment settings");
+}
 
 // Helper functions for environment variable management
 function getRequiredEnv(name: string): string {
@@ -9,11 +21,14 @@ function getRequiredEnv(name: string): string {
   if (!value) {
     throw new Error(`Missing required environment variable: ${name}`);
   }
+  console.log(`Loaded required env var: ${name}`);
   return value;
 }
 
 function getOptionalEnv(name: string, defaultValue: string): string {
-  return Deno.env.get(name) || defaultValue;
+  const value = Deno.env.get(name);
+  console.log(`Loaded optional env var: ${name} = ${value || '[using default]'}`);
+  return value || defaultValue;
 }
 
 // Environment detection
@@ -31,9 +46,12 @@ export const config = {
   port: parseInt(getOptionalEnv("PORT", "8000")),
   hostname: getOptionalEnv("HOSTNAME", "localhost"),
   
-  // Database config
+  // Database config - UPDATED for Deno KV
   database: {
-    path: getOptionalEnv("DB_PATH", "./db/contact.db"),
+    // For development only - Deno KV path
+    path: isProduction 
+      ? undefined // In production, Deno Deploy will manage KV storage
+      : getOptionalEnv("KV_PATH", "./db/data.kv"),
   },
   
   // Admin credentials

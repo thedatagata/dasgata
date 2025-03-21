@@ -1,59 +1,85 @@
-import { FreshContext, MiddlewareHandler } from "$fresh/server.ts";
-import { initDatabase } from "../utils/db.ts";
+// routes/_middleware.ts
+import { FreshContext } from "$fresh/server.ts";
+import { getKv } from "../utils/db.ts";
 import { config } from "../utils/config.ts";
-import { deleteCookie, getCookies, setCookie } from "$std/http/cookie.ts";
 
-// Update routes/_middleware.ts to include this at the top:
-
-// Define session interface
-interface SessionData {
-  authenticated?: boolean;
-  isAdmin?: boolean;
-  [key: string]: any;
+interface AdminState {
+  isLoggedIn: boolean;
+  email?: string;
 }
 
-// Extend Fresh's state
-declare module "$fresh/server.ts" {
-  interface State {
-    session: SessionData;
+export async function handler(
+  req: Request,
+  ctx: FreshContext<AdminState>
+) {
+  // Skip auth for login route
+  if (ctx.url.pathname === "/admin/login") {
+    return await ctx.next();
   }
-}
 
-// Initialize database when server starts
-await initDatabase();
-
-export const handler: MiddlewareHandler = async (req: Request, ctx: FreshContext) => {
-  // Get session from cookie
-  const cookies = getCookies(req.headers);
-  const sessionCookie = cookies[config.session.cookieName];
-  
-  let sessionData = {};
-  if (sessionCookie) {
-    try {
-      sessionData = JSON.parse(decodeURIComponent(sessionCookie));
-    } catch (e) {
-      console.error("Error parsing session:", e);
-    }
+  // Only apply auth middleware to admin routes
+  if (!ctx.url.pathname.startsWith("/admin")) {
+    return await ctx.next();
   }
-  
-  // Add session to context
-  ctx.state.session = sessionData;
-  const response = await ctx.next();
-  
-  // Update cookie if session changed
-  if (ctx.state.session && Object.keys(ctx.state.session).length > 0) {
-    setCookie(response.headers, {
-      name: config.session.cookieName,
-      value: encodeURIComponent(JSON.stringify(ctx.state.session)),
-      maxAge: config.session.maxAge,
-      httpOnly: true,
-      path: "/",
-      sameSite: "Lax",
+
+  try {
+    // Parse cookies manually without using JSON.parse
+    const cookieHeader = req.headers.get("Cookie") || "";
+    const cookies: Record<string, string> = {};
+    
+    // Split the cookie header into individual cookies
+    cookieHeader.split(';').forEach(cookie => {
+      const parts = cookie.trim().split('=');
+      if (parts.length >= 2) {
+        // The cookie name is the first part, the value is everything else joined by =
+        const name = parts[0].trim();
+        const value = parts.slice(1).join('=').trim();
+        cookies[name] = value;
+      }
     });
-  } else if (sessionCookie && !ctx.state.session) {
-    // Clear if session was destroyed
-    deleteCookie(response.headers, config.session.cookieName, { path: "/" });
+    
+    const sessionId = cookies[config.session.cookieName];
+
+    if (!sessionId) {
+      console.log("No session cookie found, redirecting to login");
+      return redirectToLogin(req.url);
+    }
+
+    // Verify session in KV
+    const kv = getKv();
+    const sessionResult = await kv.get(["sessions", sessionId]);
+    const session = sessionResult.value as { email: string; expires: number } | null;
+
+    if (!session) {
+      console.log("Session not found in KV, redirecting to login");
+      return redirectToLogin(req.url);
+    }
+
+    if (session.expires < Date.now()) {
+      console.log("Session expired, redirecting to login");
+      return redirectToLogin(req.url);
+    }
+
+    // Set state for downstream handlers
+    ctx.state.isLoggedIn = true;
+    ctx.state.email = session.email;
+    
+    // Continue to the route handler
+    return await ctx.next();
+  } catch (error) {
+    console.error("Auth middleware error:", error);
+    return redirectToLogin(req.url);
   }
+}
+
+function redirectToLogin(currentUrl: string): Response {
+  const url = new URL("/admin/login", currentUrl);
+  url.searchParams.set("redirectTo", currentUrl);
   
-  return response;
-};
+  return new Response(null, {
+    status: 302,
+    headers: {
+      Location: url.toString()
+    }
+  });
+}

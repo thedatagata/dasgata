@@ -1,93 +1,88 @@
-import { getDb } from "../utils/db.ts";
+// models/contact.ts
+import { getKv } from "../utils/db.ts";
 
-// Contact form submission interface
 export interface Contact {
-  id?: number;
+  id: string;
   name: string;
   email: string;
   service?: string;
   message: string;
-  created_at?: string;
-  status?: string;
+  created_at: string;
+  status: string;
 }
 
 export class ContactModel {
-  // Create a new contact submission
-  static create(contact: Contact): Contact {
-    const db = getDb();
-    const { name, email, service, message } = contact;
+  static async create(contact: Omit<Contact, "id" | "created_at" | "status">): Promise<Contact> {
+    const kv = getKv();
+    const id = crypto.randomUUID();
     
-    const query = `
-      INSERT INTO contacts (name, email, service, message)
-      VALUES (?, ?, ?, ?)
-    `;
+    const newContact: Contact = {
+      id,
+      ...contact,
+      created_at: new Date().toISOString(),
+      status: 'new'
+    };
     
-    db.prepare(query).run(name, email, service, message);
-    const id = db.lastInsertRowId;
+    await kv.set(["contacts", id], newContact);
+    await kv.set(["contacts_by_email", contact.email, id], { id });
     
-    // Return the created contact with its ID
-    return { id, ...contact, status: 'new', created_at: new Date().toISOString() };
+    return newContact;
   }
 
-  // Get all contacts
-  static getAll(): Contact[] {
-    const db = getDb();
-    const query = "SELECT * FROM contacts ORDER BY created_at DESC";
+  static async getAll(): Promise<Contact[]> {
+    const kv = getKv();
+    const contacts: Contact[] = [];
     
-    return db.prepare(query).all() as Contact[];
-  }
-
-  // Get a single contact by ID
-  static getById(id: number): Contact | null {
-    const db = getDb();
-    const query = "SELECT * FROM contacts WHERE id = ?";
-    
-    return db.prepare(query).get(id) as Contact || null;
-  }
-
-  // Update a contact
-  static update(id: number, contact: Partial<Contact>): boolean {
-    const db = getDb();
-    const existingContact = this.getById(id);
-    
-    if (!existingContact) {
-      return false;
+    const entries = kv.list<Contact>({ prefix: ["contacts"] });
+    for await (const entry of entries) {
+      contacts.push(entry.value);
     }
     
-    // Build update query based on provided fields
-    const updates: string[] = [];
-    const values: any[] = [];
-    
-    for (const [key, value] of Object.entries(contact)) {
-      if (key !== 'id' && key !== 'created_at') {
-        updates.push(`${key} = ?`);
-        values.push(value);
-      }
-    }
-    
-    if (updates.length === 0) {
-      return false;
-    }
-    
-    // Add ID to values for WHERE clause
-    values.push(id);
-    
-    const query = `
-      UPDATE contacts
-      SET ${updates.join(', ')}
-      WHERE id = ?
-    `;
-    
-    const result = db.prepare(query).run(...values);
-    return result.changes > 0;
+    return contacts.sort((a, b) => 
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
   }
 
-  // Delete a contact
-  static delete(id: number): boolean {
-    const db = getDb();
-    const query = "DELETE FROM contacts WHERE id = ?";
+  static async getById(id: string): Promise<Contact | null> {
+    const kv = getKv();
+    const result = await kv.get<Contact>(["contacts", id]);
+    return result.value;
+  }
+
+  static async update(id: string, contact: Partial<Contact>): Promise<boolean> {
+    const kv = getKv();
+    const existingResult = await kv.get<Contact>(["contacts", id]);
+    const existingContact = existingResult.value;
     
-    const result = db.prepare(query).run(id);
-    return result.changes > 0;
+    if (!existingContact) return false;
+    
+    const updatedContact = {
+      ...existingContact,
+      ...contact,
+      id
+    };
+    
+    await kv.set(["contacts", id], updatedContact);
+    
+    if (contact.email && contact.email !== existingContact.email) {
+      await kv.delete(["contacts_by_email", existingContact.email, id]);
+      await kv.set(["contacts_by_email", contact.email, id], { id });
+    }
+    
+    return true;
+  }
+
+  static async delete(id: string): Promise<boolean> {
+    const kv = getKv();
+    
+    const result = await kv.get<Contact>(["contacts", id]);
+    const contact = result.value;
+    
+    if (!contact) return false;
+    
+    await kv.delete(["contacts", id]);
+    await kv.delete(["contacts_by_email", contact.email, id]);
+    
+    return true;
   }
 }

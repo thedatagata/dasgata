@@ -1,4 +1,4 @@
-import { useState, useEffect } from "preact/hooks";
+import { useState } from "preact/hooks";
 
 export default function ContactForm() {
   const [formData, setFormData] = useState({
@@ -62,16 +62,6 @@ export default function ContactForm() {
           isSubmitting: false
         });
         
-        // Track successful form submission with PostHog
-        if (globalThis.posthog) {
-          globalThis.posthog.capture('form_submitted', {
-            form_type: 'contact',
-            service_selected: formData.service,
-            message_length: formData.message.length,
-            visitor_id: result.visitor_id || 'unknown'
-          });
-        }
-        
         // Reset form data
         setFormData({
           name: "",
@@ -87,15 +77,6 @@ export default function ContactForm() {
           message: result.error || "There was an error submitting your message. Please try again.",
           isSubmitting: false
         });
-        
-        // Track form submission failure
-        if (globalThis.posthog) {
-          globalThis.posthog.capture('form_error', {
-            form_type: 'contact',
-            error_message: result.error || 'Unknown error',
-            service_selected: formData.service
-          });
-        }
       }
     } catch (error) {
       // Network or other error
@@ -106,21 +87,12 @@ export default function ContactForm() {
         message: "There was an error connecting to the server. Please try again later.",
         isSubmitting: false
       });
-      
-      // Track network error
-      if (globalThis.posthog) {
-        globalThis.posthog.capture('form_network_error', {
-          form_type: 'contact',
-          error_type: 'network',
-          service_selected: formData.service
-        });
-      }
     }
   };
 
   return (
     <div class="bg-white p-8 rounded-lg shadow-lg border border-gray-100">
-      <h3 class="text-2xl font-semibold text-[#172217] mb-6">Send Us a Message</h3>
+      <h3 class="text-2xl font-semibold text-gray-800 mb-6">Send Us a Message</h3>
       
       {formStatus.submitted && (
         <div 
@@ -133,7 +105,6 @@ export default function ContactForm() {
       )}
       
       <form class="space-y-4" onSubmit={handleSubmit}>
-        {/* Form fields remain unchanged */}
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Your Name</label>
           <input
@@ -142,7 +113,7 @@ export default function ContactForm() {
             value={formData.name}
             onChange={handleChange}
             required
-            class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#90C137] focus:border-[#90C137]"
+            class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
             placeholder="John Doe"
             disabled={formStatus.isSubmitting}
           />
@@ -155,7 +126,7 @@ export default function ContactForm() {
             value={formData.email}
             onChange={handleChange}
             required
-            class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#90C137] focus:border-[#90C137]"
+            class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
             placeholder="john@example.com"
             disabled={formStatus.isSubmitting}
           />
@@ -166,7 +137,7 @@ export default function ContactForm() {
             name="service" 
             value={formData.service}
             onChange={handleChange}
-            class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#90C137] focus:border-[#90C137]"
+            class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
             disabled={formStatus.isSubmitting}
           >
             <option value="data-architecture">Data Architecture</option>
@@ -183,17 +154,17 @@ export default function ContactForm() {
             onChange={handleChange}
             required
             rows={4}
-            class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#90C137] focus:border-[#90C137]"
+            class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
             placeholder="Tell us about your project or questions..."
             disabled={formStatus.isSubmitting}
-          ></textarea>
+          />
         </div>
         <button
           type="submit"
           class={`w-full py-2 px-4 rounded-md ${
             formStatus.isSubmitting 
               ? "bg-gray-400 cursor-not-allowed" 
-              : "bg-[#90C137] hover:bg-[#7dab2a]"
+              : "bg-green-500 hover:bg-green-400"
           } text-white transition-colors`}
           disabled={formStatus.isSubmitting}
         >

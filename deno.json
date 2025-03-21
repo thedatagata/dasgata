@@ -1,27 +1,35 @@
 {
   "tasks": {
-    "start": "deno run -A --watch=static/,routes/ dev.ts",
-    "build": "deno run -A dev.ts build",
-    "preview": "deno run -A main.ts"
+    "start": "deno run -A --unstable-kv --watch=static/,routes/ dev.ts",
+    "build": "deno run -A --unstable-kv dev.ts build",
+    "preview": "deno run -A --unstable-kv main.ts"
   },
-  "nodeModulesDir": "auto",
   "imports": {
-    "$fresh/": "https://deno.land/x/fresh@1.6.1/",
-    "$std/": "https://deno.land/std@0.193.0/",
-    "@std/dotenv": "jsr:@std/dotenv@^0.225.3",
+    "$fresh/": "https://deno.land/x/fresh@1.6.5/",
     "preact": "https://esm.sh/preact@10.19.2",
     "preact/": "https://esm.sh/preact@10.19.2/",
     "preact-render-to-string": "https://esm.sh/*preact-render-to-string@6.2.2",
     "@preact/signals": "https://esm.sh/*@preact/signals@1.2.1",
     "@preact/signals-core": "https://esm.sh/*@preact/signals-core@1.5.0",
-    "tailwindcss": "npm:tailwindcss@3.4.1",
-    "tailwindcss/": "npm:/tailwindcss@3.4.1/",
-    "oak": "jsr:@oak/oak@^17",
-    "sqlite": "jsr:@db/sqlite@0.11",
-    "posthog-node": "npm:posthog-node@4.10.1"
+    "twind": "https://esm.sh/twind@0.16.19",
+    "twind/": "https://esm.sh/twind@0.16.19/",
+    "@std/": "https://deno.land/std@0.213.0/",
+    "$std/": "https://deno.land/std@0.213.0/",
+    "posthog-node": "npm:posthog-node@3.1.2"
   },
   "compilerOptions": {
     "jsx": "react-jsx",
     "jsxImportSource": "preact"
+  },
+  "fmt": {
+    "indentWidth": 2,
+    "lineWidth": 100,
+    "semiColons": true
+  },
+  "unstable": ["kv"],
+  "lint": {
+    "rules": {
+      "tags": ["recommended"]
+    }
   }
 }

@@ -7,6 +7,7 @@ import * as $_app from "./routes/_app.tsx";
 import * as $_middleware from "./routes/_middleware.ts";
 import * as $admin_middleware from "./routes/admin/_middleware.ts";
 import * as $admin_contacts from "./routes/admin/contacts.tsx";
+import * as $admin_contacts_id_ from "./routes/admin/contacts/[id].ts";
 import * as $admin_login from "./routes/admin/login.tsx";
 import * as $admin_logout from "./routes/admin/logout.ts";
 import * as $api_contact from "./routes/api/contact.ts";
@@ -25,6 +26,7 @@ const manifest = {
     "./routes/_middleware.ts": $_middleware,
     "./routes/admin/_middleware.ts": $admin_middleware,
     "./routes/admin/contacts.tsx": $admin_contacts,
+    "./routes/admin/contacts/[id].ts": $admin_contacts_id_,
     "./routes/admin/login.tsx": $admin_login,
     "./routes/admin/logout.ts": $admin_logout,
     "./routes/api/contact.ts": $api_contact,

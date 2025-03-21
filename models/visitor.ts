@@ -1,18 +1,16 @@
-import { getDb } from "../utils/db.ts";
+// models/visitor.ts
+import { getKv } from "../utils/db.ts";
 
-// Define the visitor interface
 export interface Visitor {
-  id?: number;
+  id: string;
   email: string;
   visitor_id: string;
-  first_seen?: string;
-  last_seen?: string;
+  first_seen: string;
+  last_seen: string;
 }
 
 export class VisitorModel {
-  // Generate a unique visitor ID
   private static generateVisitorId(): string {
-    // Generate a random string of 16 characters
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     let result = "";
     for (let i = 0; i < 16; i++) {
@@ -21,49 +19,57 @@ export class VisitorModel {
     return result;
   }
 
-  // Get or create a visitor by email
-  static getOrCreate(email: string): Visitor {
-    const db = getDb();
+  static async getOrCreate(email: string): Promise<Visitor> {
+    const kv = getKv();
     
-    // Try to find the visitor first
-    const visitor = db.prepare("SELECT * FROM visitors WHERE email = ?").get(email) as Visitor | undefined;
+    const result = await kv.get<{ visitor_id: string }>(["visitors_by_email", email]);
     
-    if (visitor) {
-      // Update last_seen timestamp
-      db.prepare("UPDATE visitors SET last_seen = datetime('now') WHERE id = ?").run(visitor.id);
-      return visitor;
+    if (result.value) {
+      const visitorResult = await kv.get<Visitor>(["visitors", result.value.visitor_id]);
+      const visitor = visitorResult.value;
+      
+      if (visitor) {
+        const updatedVisitor = {
+          ...visitor,
+          last_seen: new Date().toISOString()
+        };
+        
+        await kv.set(["visitors", visitor.visitor_id], updatedVisitor);
+        return updatedVisitor;
+      }
     }
     
-    // Generate a new visitor ID
+    const id = crypto.randomUUID();
     const visitor_id = this.generateVisitorId();
-    
-    // Insert the new visitor
-    db.prepare(
-      "INSERT INTO visitors (email, visitor_id) VALUES (?, ?)"
-    ).run(email, visitor_id);
-    
-    const id = db.lastInsertRowId;
     const now = new Date().toISOString();
     
-    // Return the new visitor
-    return {
-      id: Number(id),
+    const newVisitor: Visitor = {
+      id,
       email,
       visitor_id,
       first_seen: now,
       last_seen: now
     };
+    
+    await kv.set(["visitors", visitor_id], newVisitor);
+    await kv.set(["visitors_by_email", email], { visitor_id });
+    
+    return newVisitor;
   }
 
-  // Get a visitor by email
-  static getByEmail(email: string): Visitor | null {
-    const db = getDb();
-    return db.prepare("SELECT * FROM visitors WHERE email = ?").get(email) as Visitor | null;
+  static async getByEmail(email: string): Promise<Visitor | null> {
+    const kv = getKv();
+    
+    const result = await kv.get<{ visitor_id: string }>(["visitors_by_email", email]);
+    if (!result.value) return null;
+    
+    const visitorResult = await kv.get<Visitor>(["visitors", result.value.visitor_id]);
+    return visitorResult.value;
   }
 
-  // Get a visitor by visitor_id
-  static getByVisitorId(visitor_id: string): Visitor | null {
-    const db = getDb();
-    return db.prepare("SELECT * FROM visitors WHERE visitor_id = ?").get(visitor_id) as Visitor | null;
+  static async getByVisitorId(visitor_id: string): Promise<Visitor | null> {
+    const kv = getKv();
+    const result = await kv.get<Visitor>(["visitors", visitor_id]);
+    return result.value;
   }
 }
