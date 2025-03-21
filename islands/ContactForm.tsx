@@ -4,7 +4,7 @@ export default function ContactForm() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    service: "data-architecture", // Default service selection
+    service: "data-architecture",
     message: "",
   });
   
@@ -42,7 +42,7 @@ export default function ContactForm() {
     }
     
     try {
-      // Submit to our new API endpoint
+      // Submit to our API endpoint
       const response = await fetch("/api/contact", {
         method: "POST",
         headers: {
@@ -61,7 +61,16 @@ export default function ContactForm() {
           message: "Thank you for your message! We'll get back to you shortly.",
           isSubmitting: false
         });
-  
+        
+        // Track successful form submission with PostHog
+        if (globalThis.posthog) {
+          globalThis.posthog.capture('form_submitted', {
+            form_type: 'contact',
+            service_selected: formData.service,
+            message_length: formData.message.length,
+            visitor_id: result.visitor_id || 'unknown'
+          });
+        }
         
         // Reset form data
         setFormData({
@@ -78,6 +87,15 @@ export default function ContactForm() {
           message: result.error || "There was an error submitting your message. Please try again.",
           isSubmitting: false
         });
+        
+        // Track form submission failure
+        if (globalThis.posthog) {
+          globalThis.posthog.capture('form_error', {
+            form_type: 'contact',
+            error_message: result.error || 'Unknown error',
+            service_selected: formData.service
+          });
+        }
       }
     } catch (error) {
       // Network or other error
@@ -88,6 +106,15 @@ export default function ContactForm() {
         message: "There was an error connecting to the server. Please try again later.",
         isSubmitting: false
       });
+      
+      // Track network error
+      if (globalThis.posthog) {
+        globalThis.posthog.capture('form_network_error', {
+          form_type: 'contact',
+          error_type: 'network',
+          service_selected: formData.service
+        });
+      }
     }
   };
 
@@ -106,6 +133,7 @@ export default function ContactForm() {
       )}
       
       <form class="space-y-4" onSubmit={handleSubmit}>
+        {/* Form fields remain unchanged */}
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Your Name</label>
           <input

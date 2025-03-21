@@ -3,6 +3,7 @@ import { Handlers } from "$fresh/server.ts";
 import { getDb, initDatabase } from "../../utils/db.ts";
 import { ContactModel } from "../../models/contact.ts";
 import { VisitorModel } from "../../models/visitor.ts";
+import { getPostHogClient } from "../../utils/posthog-server.ts";
 
 // Initialize the database when the module loads
 await initDatabase();
@@ -27,6 +28,23 @@ export const handler: Handlers = {
       // Create or update visitor record for PostHog tracking
       const visitor = VisitorModel.getOrCreate(contact.email);
       
+      // Track the event in PostHog
+      const posthog = getPostHogClient();
+      if (posthog) {
+        posthog.capture({
+          distinctId: visitor.visitor_id,
+          event: 'contact_form_submitted',
+          properties: {
+            name: contact.name,
+            email: contact.email,
+            service: contact.service,
+            message_length: contact.message.length,
+            submission_source: 'server',
+            status: 'success'
+          }
+        });
+      }
+      
       // Return success response
       return new Response(
         JSON.stringify({
@@ -43,6 +61,19 @@ export const handler: Handlers = {
       );
     } catch (error) {
       console.error("Error creating contact:", error);
+      
+      // Track the error event if possible
+      const posthog = getPostHogClient();
+      if (posthog) {
+        posthog.capture({
+          distinctId: 'server',
+          event: 'contact_form_error',
+          properties: {
+            error_message: error.message,
+            submission_source: 'server'
+          }
+        });
+      }
       
       // Return error response
       return new Response(

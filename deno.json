@@ -17,7 +17,8 @@
     "tailwindcss": "npm:tailwindcss@3.4.1",
     "tailwindcss/": "npm:/tailwindcss@3.4.1/",
     "oak": "jsr:@oak/oak@^17",
-    "sqlite": "jsr:@db/sqlite@0.11"
+    "sqlite": "jsr:@db/sqlite@0.11",
+    "posthog-node": "npm:posthog-node@4.10.1"
   },
   "compilerOptions": {
     "jsx": "react-jsx",
