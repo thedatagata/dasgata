@@ -1,81 +1,41 @@
 // utils/config.ts
 
-// Updated dotenv import for Deno v2.2.4
+// Load environment variables if available
 import { load } from "@std/dotenv/mod.ts";
 
-// Load environment variables
 try {
-  const result = await load({
-    export: true,
-    allowEmptyValues: true
-  });
-  console.log("Loaded environment variables:", Object.keys(result).join(", "));
+  await load({ export: true });
 } catch (err) {
-  console.log("No .env file found or error loading it:", err.message);
-  console.log("Using default environment settings");
+  console.log("No .env file found or error loading it");
 }
 
-// Helper functions for environment variable management
+// Helper function for required environment variables
 function getRequiredEnv(name: string): string {
   const value = Deno.env.get(name);
   if (!value) {
     throw new Error(`Missing required environment variable: ${name}`);
   }
-  console.log(`Loaded required env var: ${name}`);
   return value;
 }
 
-function getOptionalEnv(name: string, defaultValue: string): string {
-  const value = Deno.env.get(name);
-  console.log(`Loaded optional env var: ${name} = ${value || '[using default]'}`);
-  return value || defaultValue;
-}
-
-// Environment detection
-const environment = getOptionalEnv("DENO_ENV", "development");
-const isProduction = environment === "production";
-
 // Application configuration object
 export const config = {
-  // Environment information
-  environment,
-  isProduction,
-  isDevelopment: environment === "development",
-  
-  // Server config
-  port: parseInt(getOptionalEnv("PORT", "8000")),
-  hostname: getOptionalEnv("HOSTNAME", "localhost"),
-  
-  // Database config - UPDATED for Deno KV
-  database: {
-    // For development only - Deno KV path
-    path: isProduction 
-      ? undefined // In production, Deno Deploy will manage KV storage
-      : getOptionalEnv("KV_PATH", "./db/data.kv"),
-  },
-  
   // Admin credentials
   admin: {
-    email: isProduction 
-      ? getRequiredEnv("ADMIN_EMAIL") 
-      : getOptionalEnv("ADMIN_EMAIL", "admin@example.com"),
-    password: isProduction 
-      ? getRequiredEnv("ADMIN_PASSWORD") 
-      : getOptionalEnv("ADMIN_PASSWORD", "admin123"),
+    email: getRequiredEnv("ADMIN_EMAIL"),
+    password: getRequiredEnv("ADMIN_PASSWORD"),
   },
   
-  // Session config
+  // Session config (kept as it may be necessary for auth)
   session: {
-    secret: isProduction 
-      ? getRequiredEnv("SESSION_SECRET") 
-      : getOptionalEnv("SESSION_SECRET", "dev_session_secret_do_not_use_in_production"),
-    cookieName: getOptionalEnv("SESSION_COOKIE_NAME", "data_gata_session"),
-    maxAge: parseInt(getOptionalEnv("SESSION_MAX_AGE", "86400")), // 24 hours in seconds
+    secret: getRequiredEnv("SESSION_SECRET"),
+    cookieName: "data_gata_session",
+    maxAge: 86400, // 24 hours in seconds
   },
   
   // PostHog config
   posthog: {
-    apiKey: getOptionalEnv("POSTHOG_API_KEY", ""),
-    apiHost: getOptionalEnv("POSTHOG_API_HOST", "https://us.i.posthog.com"),
+    apiKey: getRequiredEnv("POSTHOG_API_KEY"),
+    apiHost: Deno.env.get("POSTHOG_API_HOST") || "https://swamp-data-pipe.dasgata.com",
   }
 };
