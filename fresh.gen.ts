@@ -8,8 +8,9 @@ import * as $_middleware from "./routes/_middleware.ts";
 import * as $admin_middleware from "./routes/admin/_middleware.ts";
 import * as $admin_contacts from "./routes/admin/contacts.tsx";
 import * as $admin_contacts_id_ from "./routes/admin/contacts/[id].ts";
-import * as $admin_login from "./routes/admin/login.tsx";
-import * as $admin_logout from "./routes/admin/logout.ts";
+import * as $admin_oauth_callback from "./routes/admin/oauth/callback.ts";
+import * as $admin_oauth_signin from "./routes/admin/oauth/signin.ts";
+import * as $admin_oauth_signout from "./routes/admin/oauth/signout.ts";
 import * as $api_contact from "./routes/api/contact.ts";
 import * as $api_contact_id_ from "./routes/api/contact/[id].tsx";
 import * as $api_visitor from "./routes/api/visitor.ts";
@@ -27,8 +28,9 @@ const manifest = {
     "./routes/admin/_middleware.ts": $admin_middleware,
     "./routes/admin/contacts.tsx": $admin_contacts,
     "./routes/admin/contacts/[id].ts": $admin_contacts_id_,
-    "./routes/admin/login.tsx": $admin_login,
-    "./routes/admin/logout.ts": $admin_logout,
+    "./routes/admin/oauth/callback.ts": $admin_oauth_callback,
+    "./routes/admin/oauth/signin.ts": $admin_oauth_signin,
+    "./routes/admin/oauth/signout.ts": $admin_oauth_signout,
     "./routes/api/contact.ts": $api_contact,
     "./routes/api/contact/[id].tsx": $api_contact_id_,
     "./routes/api/visitor.ts": $api_visitor,

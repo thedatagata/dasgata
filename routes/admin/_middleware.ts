@@ -12,20 +12,34 @@ export async function handler(
   req: Request,
   ctx: FreshContext<AdminState>
 ) {
-  // Skip auth for login route
-  if (ctx.url.pathname === "/admin/login") {
+  // Skip auth for OAuth-related routes
+  if (
+    ctx.url.pathname === "/admin/oauth/signin" ||
+    ctx.url.pathname === "/admin/oauth/callback" ||
+    ctx.url.pathname === "/admin/oauth/signout"
+  ) {
     return await ctx.next();
   }
 
   try {
     // Parse cookies manually
     const cookieHeader = req.headers.get("Cookie") || "";
-    const cookies = parseCookies(cookieHeader);
+    const cookies: Record<string, string> = {};
+    
+    cookieHeader.split(';').forEach(cookie => {
+      const parts = cookie.trim().split('=');
+      if (parts.length >= 2) {
+        const name = parts[0].trim();
+        const value = parts.slice(1).join('=').trim();
+        cookies[name] = value;
+      }
+    });
+    
     const sessionId = cookies[config.session.cookieName];
 
     if (!sessionId) {
-      console.log("No session cookie found, redirecting to login");
-      return redirectToLogin(req.url);
+      console.log("No session cookie found, redirecting to OAuth signin");
+      return redirectToOAuthSignin(req.url);
     }
 
     // Verify session in KV
@@ -34,13 +48,13 @@ export async function handler(
     const session = sessionResult.value as { email: string; expires: number } | null;
 
     if (!session) {
-      console.log("Session not found in KV, redirecting to login");
-      return redirectToLogin(req.url);
+      console.log("Session not found in KV, redirecting to OAuth signin");
+      return redirectToOAuthSignin(req.url);
     }
 
     if (session.expires < Date.now()) {
-      console.log("Session expired, redirecting to login");
-      return redirectToLogin(req.url);
+      console.log("Session expired, redirecting to OAuth signin");
+      return redirectToOAuthSignin(req.url);
     }
 
     // Set state for downstream handlers
@@ -51,13 +65,14 @@ export async function handler(
     return await ctx.next();
   } catch (error) {
     console.error("Auth middleware error:", error);
-    return redirectToLogin(req.url);
+    return redirectToOAuthSignin(req.url);
   }
 }
 
-function redirectToLogin(currentUrl: string): Response {
-  const url = new URL("/admin/login", currentUrl);
-  url.searchParams.set("redirectTo", currentUrl);
+// IMPORTANT: Updated to redirect to OAuth sign-in instead of login
+function redirectToOAuthSignin(currentUrl: string): Response {
+  const url = new URL("/admin/oauth/signin", currentUrl);
+  url.searchParams.set("success_url", currentUrl);
   
   return new Response(null, {
     status: 302,
@@ -65,18 +80,4 @@ function redirectToLogin(currentUrl: string): Response {
       Location: url.toString()
     }
   });
-}
-
-// Simple cookie parser
-function parseCookies(cookieHeader: string): Record<string, string> {
-  const cookies: Record<string, string> = {};
-  
-  cookieHeader.split(';').forEach(cookie => {
-    const [name, value] = cookie.trim().split('=');
-    if (name && value) {
-      cookies[name] = value;
-    }
-  });
-  
-  return cookies;
 }

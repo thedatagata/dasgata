@@ -15,6 +15,7 @@
     "twind/": "https://esm.sh/twind@0.16.19/",
     "@std/": "https://deno.land/std@0.213.0/",
     "$std/": "https://deno.land/std@0.213.0/",
+    "@deno/kv-oauth": "jsr:@deno/kv-oauth",
     "posthog-node": "npm:posthog-node@3.1.2"
   },
   "compilerOptions": {
