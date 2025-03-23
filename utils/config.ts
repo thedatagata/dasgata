@@ -8,10 +8,6 @@ export const config = {
     cookieName: "data_gata_session",
     maxAge: 86400,
   },
-  posthog: {
-    apiKey: Deno.env.get("POSTHOG_API_KEY"),
-    apiHost: Deno.env.get("POSTHOG_API_HOST") || "https://swamp-data-pipe.dasgata.com",
-  }, 
   oauth: {
     googleClientId: Deno.env.get("GOOGLE_CLIENT_ID"),
     googleClientSecret: Deno.env.get("GOOGLE_CLIENT_SECRET"),

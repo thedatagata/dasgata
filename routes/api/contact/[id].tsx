@@ -2,7 +2,6 @@
 import { Handlers } from "$fresh/server.ts";
 import { ContactModel } from "../../../models/contact.ts";
 import { initDatabase } from "../../../utils/db.ts";
-import { trackEvent } from "../../../utils/posthog.ts";
 
 // Initialize the database
 await initDatabase();
@@ -40,14 +39,7 @@ export const handler: Handlers = {
       if (!deleted) {
         return Response.json({ success: false, error: "Failed to delete contact" }, { status: 500 });
       }
-      
-      // Track contact deletion
-      trackEvent('contact_deleted', 'admin', {
-        contact_id: id,
-        contact_email: contact.email,
-        contact_service: contact.service || 'general',
-        days_since_creation: Math.floor((Date.now() - new Date(contact.created_at).getTime()) / (1000 * 60 * 60 * 24))
-      });
+    
       
       return Response.json({ success: true });
     } catch (error) {

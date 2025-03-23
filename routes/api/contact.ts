@@ -3,7 +3,6 @@ import { Handlers } from "$fresh/server.ts";
 import { initDatabase } from "../../utils/db.ts";
 import { ContactModel } from "../../models/contact.ts";
 import { VisitorModel } from "../../models/visitor.ts";
-import { trackEvent } from "../../utils/posthog.ts";
 
 // Initialize the database
 await initDatabase();
@@ -23,14 +22,7 @@ export const handler: Handlers = {
       // Now async
       const newContact = await ContactModel.create(contact);
       const visitor = await VisitorModel.getOrCreate(contact.email);
-      
-      // Track successful form submission
-      trackEvent('form_submitted', visitor.visitor_id, {
-        form_type: 'contact',
-        service_selected: contact.service,
-        message_length: contact.message.length,
-        contact_id: newContact.id
-      });
+    
       
       return new Response(
         JSON.stringify({
