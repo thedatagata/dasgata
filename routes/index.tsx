@@ -19,7 +19,7 @@ export default function Home() {
         <meta property="og:title" content="DATA_GATA | Modern Data Architecture" />
         <meta property="og:description" content="Expert data architecture, analytics engineering, and lakehouse implementation services." />
         <meta property="og:image" content="/nerdy_alligator_headshot.png" />
-        <meta property="og:url" content="https://datagata.com" />
+        <meta property="og:url" content="https://dasgata.com" />
         <meta name="twitter:card" content="summary_large_image" />
       </Head>
       
