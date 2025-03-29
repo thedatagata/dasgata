@@ -16,9 +16,10 @@ import * as $api_contact_id_ from "./routes/api/contact/[id].tsx";
 import * as $api_visitor from "./routes/api/visitor.ts";
 import * as $index from "./routes/index.tsx";
 import * as $ContactForm from "./islands/ContactForm.tsx";
+import * as $PageTracker from "./islands/PageTracker.tsx";
 import * as $ScrollToTop from "./islands/ScrollToTop.tsx";
 import * as $ScrollingMenu from "./islands/ScrollingMenu.tsx";
-import { type Manifest } from "$fresh/server.ts";
+import type { Manifest } from "$fresh/server.ts";
 
 const manifest = {
   routes: {
@@ -38,6 +39,7 @@ const manifest = {
   },
   islands: {
     "./islands/ContactForm.tsx": $ContactForm,
+    "./islands/PageTracker.tsx": $PageTracker,
     "./islands/ScrollToTop.tsx": $ScrollToTop,
     "./islands/ScrollingMenu.tsx": $ScrollingMenu,
   },

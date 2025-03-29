@@ -1,4 +1,6 @@
+// islands/ContactForm.tsx
 import { useState } from "preact/hooks";
+import { trackContactFormSubmission } from "../utils/dataLayer.ts";
 
 export default function ContactForm() {
   const [formData, setFormData] = useState({
@@ -54,6 +56,9 @@ export default function ContactForm() {
       const result = await response.json();
       
       if (response.ok && result.success) {
+        // Track successful form submission with server-side GTM
+        trackContactFormSubmission(formData.name, formData.email, formData.service);
+        
         // Success response
         setFormStatus({
           submitted: true,
