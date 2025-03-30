@@ -9,7 +9,7 @@ export const oauthConfig = createGoogleOAuthConfig({
   // Dynamically set the redirect URI based on environment
   redirectUri: isLocalDevelopment 
     ? "http://localhost:8000/admin/oauth/callback"
-    : "https://dasgata.com/admin/oauth/callback", // Update with your production domain
+    : "https://gata-swamp.io/admin/oauth/callback", // Update with your production domain
   
   // Request email scope to get user's email
   scope: "https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email"

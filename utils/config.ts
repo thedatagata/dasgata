@@ -15,6 +15,6 @@ export const config = {
   gtm: {
     webContainerId: Deno.env.get("GTM_WEB_CONTAINER_ID") || "GTM-NTBPG2C7",
     serverContainerUrl: Deno.env.get("GTM_SERVER_CONTAINER_URL") || 
-      "https://sgtm.data-gata-swamp.com",
+      "https://sgtm.gata-swamp.io",
   }
 };

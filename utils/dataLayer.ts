@@ -13,8 +13,8 @@ declare global {
  */
 export function pushEvent(eventName: string, eventParams: Record<string, any> = {}) {
   if (typeof window !== "undefined") {
-    window.dataLayer = window.dataLayer || [];
-    window.dataLayer.push({
+    globalThis.dataLayer = globalThis.dataLayer || [];
+    globalThis.dataLayer.push({
       event: eventName,
       ...eventParams
     });
