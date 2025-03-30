@@ -24,7 +24,13 @@ export default function Hero() {
               DATA_<span class="text-[#90C137]">GATA</span>
             </h1>
             <p class="text-lg md:text-xl text-[#F8F6F0]/90 max-w-2xl font-light leading-relaxed">
-              Navigating the data swamp so you don't have to. We're the experts that evolved in messy data environments to help you build scalable, reliable data platforms.
+              So you've found yourself in a data swamp after being sold on the dream of a pristine data lake complete with a lakehouse. You think this problem is unique to you?
+            </p>
+            <p class="text-lg md:text-xl text-[#F8F6F0]/90 max-w-2xl font-light leading-relaxed">
+              You were merely dooped that yet another migration and additional technology would solve your data woes. 
+            </p>
+            <p class="text-lg md:text-xl text-[#F8F6F0]/90 max-w-2xl font-light leading-relaxed">
+              The DATA_GATA was born in the data swamp. Molded by it... 
             </p>
             <div class="flex flex-wrap gap-4 pt-4">
               <a href="#contact" class="inline-flex items-center px-6 py-3 bg-[#90C137] text-[#172217] font-medium rounded-md hover:bg-[#a0d147] transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
