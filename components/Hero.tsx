@@ -27,7 +27,7 @@ export default function Hero() {
               So you've found yourself in a data swamp after being sold on the dream of a lakehouse on a pristine data lake, and you think this problem is unique to you?
             </p>
             <p class="text-lg md:text-xl text-[#F8F6F0]/90 max-w-2xl font-light leading-relaxed">
-              You were merely dooped that yet another migration and additional technology would solve your data woes. 
+              You were merely dooped into believing technology would solve your data woes, but after yet another failed migration, here you are in the swamp.
             </p>
             <p class="text-lg md:text-xl text-[#F8F6F0]/90 max-w-2xl font-light leading-relaxed">
               The DATA_GATA was born in the data swamp. Molded by it... 
