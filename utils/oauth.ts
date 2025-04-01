@@ -25,5 +25,5 @@ export const {
 
 // Authorized admin emails
 export const AUTHORIZED_EMAILS = [
-  config.admin.email || "thedatagata@dasgata.com"
+  config.admin.email || "thedatagata@gmail.com"
 ];

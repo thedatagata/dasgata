@@ -1,7 +1,6 @@
 export const config = {
   admin: {
-    email: Deno.env.get("ADMIN_EMAIL") || "thedatagata@dasgata.com",
-    password: Deno.env.get("ADMIN_PASSWORD"),
+    email: Deno.env.get("ADMIN_EMAIL") || "thedatagata@gmail.com"
   },
   session: {
     secret: Deno.env.get("SESSION_SECRET"),
