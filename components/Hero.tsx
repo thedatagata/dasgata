@@ -18,36 +18,36 @@ export default function Hero() {
           {/* Hero Title and Tagline */}
           <div class="space-y-6 max-w-3xl">
             <div class="inline-block px-3 py-1 bg-[#90C137]/20 border border-[#90C137]/30 rounded-full text-[#90C137] text-sm font-medium mb-2">
-              Data Architecture Consulting
+              Your Personal Data Analyst
             </div>
             <h1 class="text-5xl md:text-7xl lg:text-8xl font-extrabold text-[#F8F6F0] tracking-tight leading-none">
               DATA_<span class="text-[#90C137]">GATA</span>
             </h1>
             <p class="text-lg md:text-xl text-[#F8F6F0]/90 max-w-2xl font-light leading-relaxed">
-              So you've found yourself in a data swamp after being sold on the dream of a lakehouse on a pristine data lake, and you think this problem is unique to you?
+              Welcome to the small data revolution. Your own personal data platform—like a personal pizza where you choose your toppings and don't have to compromise with the team that wants pineapple.
             </p>
             <p class="text-lg md:text-xl text-[#F8F6F0]/90 max-w-2xl font-light leading-relaxed">
-              You were merely dooped into believing technology would solve your data woes.
+              Ask questions in plain English. Get instant answers, visualizations, and smart recommendations for deeper analysis—all from your own data sources.
             </p>
             <p class="text-lg md:text-xl text-[#F8F6F0]/90 max-w-2xl font-light leading-relaxed">
               The DATA_GATA was born in the data swamp. Molded by it... 
             </p>
             <div class="flex flex-wrap gap-4 pt-4">
-              <a href="#contact" class="inline-flex items-center px-6 py-3 bg-[#90C137] text-[#172217] font-medium rounded-md hover:bg-[#a0d147] transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
-                Schedule a Consultation
+              <a href="/auth/signin" class="inline-flex items-center px-6 py-3 bg-[#90C137] text-[#172217] font-medium rounded-md hover:bg-[#a0d147] transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                Get Started Building your Personal Pie for Free
                 <svg class="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
                 </svg>
               </a>
               <a href="#about" class="inline-flex items-center px-6 py-3 border border-[#F8F6F0]/30 text-[#F8F6F0] font-medium rounded-md hover:bg-[#F8F6F0]/10 transition-colors">
-                Learn More
+                See How It Works
               </a>
             </div>
           </div>
 
           {/* About Section */}
           <div id="about" class="space-y-8 max-w-4xl pt-16 scroll-mt-32">
-            <h2 class="text-3xl md:text-4xl font-bold text-[#90C137]">The DATA_GATA Legend</h2>
+            <h2 class="text-3xl md:text-4xl font-bold text-[#90C137]">The Small Data Revolution</h2>
 
             <div class="flex flex-col md:flex-row gap-8 items-start">
               <img
@@ -57,13 +57,13 @@ export default function Hero() {
               />
               <div class="space-y-6">
                 <p class="text-xl text-[#F8F6F0]/90 font-light leading-relaxed">
-                  According to Silicon Valley folklore, some early stage start-ups have reported to have encountered what can only be described as the "DATA_GATA". 
+                  We've all been there—waiting for the data team to build a dashboard, arguing over which metrics matter to whose team, and compromising on a "one-size-fits-none" solution that somehow includes pineapple despite everyone saying no.
                 </p>
                 <p class="text-xl text-[#F8F6F0]/90 font-light leading-relaxed">
-                  It is rumored that this mysterious creature evolved from the sales team of a bootstrapped start-up that sold data-products that did not exist to raise capital.
+                  The technology finally exists for everyone to have their own personal data platform. Connect your sources, ask questions in plain English, and get instant answers tailored to how you work—no SQL required, no ticket queue, no compromise.
                 </p>
                 <p class="text-xl text-[#F8F6F0]/90 font-light leading-relaxed">
-                  In this environment, this once young ambitious college dropout rose from cold calling to building data products and now dedicates his career to helping others avoid adopting a data-swamp in the pursuit of a single source of truth.
+                  Your personal DATA_GATA assistant learns your data, suggests questions you should be asking, generates visualizations on the fly, and guides you to deeper insights. It's your data, your questions, your pizza toppings.
                 </p>
               </div>
             </div>

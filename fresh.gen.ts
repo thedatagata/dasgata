@@ -13,12 +13,28 @@ import * as $admin_oauth_signin from "./routes/admin/oauth/signin.ts";
 import * as $admin_oauth_signout from "./routes/admin/oauth/signout.ts";
 import * as $api_contact from "./routes/api/contact.ts";
 import * as $api_contact_id_ from "./routes/api/contact/[id].tsx";
+import * as $api_onboarding_complete from "./routes/api/onboarding/complete.ts";
 import * as $api_visitor from "./routes/api/visitor.ts";
+import * as $app_middleware from "./routes/app/_middleware.ts";
+import * as $app_dashboard from "./routes/app/dashboard.tsx";
+import * as $app_index from "./routes/app/index.tsx";
+import * as $app_loading from "./routes/app/loading.tsx";
+import * as $auth_callback from "./routes/auth/callback.ts";
+import * as $auth_signin from "./routes/auth/signin.ts";
+import * as $auth_signout from "./routes/auth/signout.ts";
 import * as $index from "./routes/index.tsx";
+import * as $onboarding_middleware from "./routes/onboarding/_middleware.ts";
+import * as $onboarding_department from "./routes/onboarding/department.tsx";
+import * as $onboarding_metrics from "./routes/onboarding/metrics.tsx";
+import * as $onboarding_sources from "./routes/onboarding/sources.tsx";
 import * as $ContactForm from "./islands/ContactForm.tsx";
 import * as $PageTracker from "./islands/PageTracker.tsx";
+import * as $PieLoading from "./islands/PieLoading.tsx";
 import * as $ScrollToTop from "./islands/ScrollToTop.tsx";
 import * as $ScrollingMenu from "./islands/ScrollingMenu.tsx";
+import * as $onboarding_DepartmentSelection from "./islands/onboarding/DepartmentSelection.tsx";
+import * as $onboarding_MetricsSelection from "./islands/onboarding/MetricsSelection.tsx";
+import * as $onboarding_SourcesSelection from "./islands/onboarding/SourcesSelection.tsx";
 import type { Manifest } from "$fresh/server.ts";
 
 const manifest = {
@@ -34,14 +50,30 @@ const manifest = {
     "./routes/admin/oauth/signout.ts": $admin_oauth_signout,
     "./routes/api/contact.ts": $api_contact,
     "./routes/api/contact/[id].tsx": $api_contact_id_,
+    "./routes/api/onboarding/complete.ts": $api_onboarding_complete,
     "./routes/api/visitor.ts": $api_visitor,
+    "./routes/app/_middleware.ts": $app_middleware,
+    "./routes/app/dashboard.tsx": $app_dashboard,
+    "./routes/app/index.tsx": $app_index,
+    "./routes/app/loading.tsx": $app_loading,
+    "./routes/auth/callback.ts": $auth_callback,
+    "./routes/auth/signin.ts": $auth_signin,
+    "./routes/auth/signout.ts": $auth_signout,
     "./routes/index.tsx": $index,
+    "./routes/onboarding/_middleware.ts": $onboarding_middleware,
+    "./routes/onboarding/department.tsx": $onboarding_department,
+    "./routes/onboarding/metrics.tsx": $onboarding_metrics,
+    "./routes/onboarding/sources.tsx": $onboarding_sources,
   },
   islands: {
     "./islands/ContactForm.tsx": $ContactForm,
     "./islands/PageTracker.tsx": $PageTracker,
+    "./islands/PieLoading.tsx": $PieLoading,
     "./islands/ScrollToTop.tsx": $ScrollToTop,
     "./islands/ScrollingMenu.tsx": $ScrollingMenu,
+    "./islands/onboarding/DepartmentSelection.tsx": $onboarding_DepartmentSelection,
+    "./islands/onboarding/MetricsSelection.tsx": $onboarding_MetricsSelection,
+    "./islands/onboarding/SourcesSelection.tsx": $onboarding_SourcesSelection,
   },
   baseUrl: import.meta.url,
 } satisfies Manifest;
