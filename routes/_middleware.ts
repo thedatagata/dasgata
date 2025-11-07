@@ -1,4 +1,3 @@
-
 // routes/_middleware.ts
 import { FreshContext } from "$fresh/server.ts";
 import { getKv } from "../utils/db.ts";
@@ -21,12 +20,20 @@ export async function handler(
     ctx.url.pathname === "/admin/oauth/signout"
   ) {
     console.log(`Skipping auth check for OAuth route: ${ctx.url.pathname}`);
-    return await ctx.next();
+    const resp = await ctx.next();
+    // Add CORS headers for DuckDB-WASM
+    resp.headers.set("Cross-Origin-Opener-Policy", "same-origin");
+    resp.headers.set("Cross-Origin-Embedder-Policy", "require-corp");
+    return resp;
   }
 
   // Only apply auth middleware to admin routes
   if (!ctx.url.pathname.startsWith("/admin")) {
-    return await ctx.next();
+    const resp = await ctx.next();
+    // Add CORS headers for DuckDB-WASM
+    resp.headers.set("Cross-Origin-Opener-Policy", "same-origin");
+    resp.headers.set("Cross-Origin-Embedder-Policy", "require-corp");
+    return resp;
   }
 
   try {
@@ -94,7 +101,11 @@ export async function handler(
     console.log(`Authenticated user: ${session.email} accessing ${ctx.url.pathname}`);
     
     // Continue to the route handler
-    return await ctx.next();
+    const resp = await ctx.next();
+    // Add CORS headers for DuckDB-WASM
+    resp.headers.set("Cross-Origin-Opener-Policy", "same-origin");
+    resp.headers.set("Cross-Origin-Embedder-Policy", "require-corp");
+    return resp;
   } catch (error) {
     console.error("Auth middleware error:", error);
     return redirectToOAuthSignin(req.url);

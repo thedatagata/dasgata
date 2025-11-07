@@ -28,10 +28,12 @@ import * as $onboarding_department from "./routes/onboarding/department.tsx";
 import * as $onboarding_metrics from "./routes/onboarding/metrics.tsx";
 import * as $onboarding_sources from "./routes/onboarding/sources.tsx";
 import * as $ContactForm from "./islands/ContactForm.tsx";
+import * as $DashboardData from "./islands/DashboardData.tsx";
 import * as $PageTracker from "./islands/PageTracker.tsx";
 import * as $PieLoading from "./islands/PieLoading.tsx";
 import * as $ScrollToTop from "./islands/ScrollToTop.tsx";
 import * as $ScrollingMenu from "./islands/ScrollingMenu.tsx";
+import * as $SimplePivot from "./islands/SimplePivot.tsx";
 import * as $onboarding_DepartmentSelection from "./islands/onboarding/DepartmentSelection.tsx";
 import * as $onboarding_MetricsSelection from "./islands/onboarding/MetricsSelection.tsx";
 import * as $onboarding_SourcesSelection from "./islands/onboarding/SourcesSelection.tsx";
@@ -67,10 +69,12 @@ const manifest = {
   },
   islands: {
     "./islands/ContactForm.tsx": $ContactForm,
+    "./islands/DashboardData.tsx": $DashboardData,
     "./islands/PageTracker.tsx": $PageTracker,
     "./islands/PieLoading.tsx": $PieLoading,
     "./islands/ScrollToTop.tsx": $ScrollToTop,
     "./islands/ScrollingMenu.tsx": $ScrollingMenu,
+    "./islands/SimplePivot.tsx": $SimplePivot,
     "./islands/onboarding/DepartmentSelection.tsx": $onboarding_DepartmentSelection,
     "./islands/onboarding/MetricsSelection.tsx": $onboarding_MetricsSelection,
     "./islands/onboarding/SourcesSelection.tsx": $onboarding_SourcesSelection,

@@ -21,6 +21,7 @@
     "@twind/preset-tailwind": "https://esm.sh/@twind/preset-tailwind@1.1.4/",
     "@twind/preset-autoprefix": "https://esm.sh/@twind/preset-autoprefix@1.0.7/"
   },
+  "nodeModulesDir": "auto",
   "compilerOptions": { "jsx": "react-jsx", "jsxImportSource": "preact" },
   "fmt": { "indentWidth": 2, "lineWidth": 100, "semiColons": true },
   "unstable": ["kv"],
