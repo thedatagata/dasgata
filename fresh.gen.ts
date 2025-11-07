@@ -29,8 +29,14 @@ import * as $onboarding_metrics from "./routes/onboarding/metrics.tsx";
 import * as $onboarding_sources from "./routes/onboarding/sources.tsx";
 import * as $ContactForm from "./islands/ContactForm.tsx";
 import * as $DashboardData from "./islands/DashboardData.tsx";
+import * as $DashboardTabs from "./islands/DashboardTabs.tsx";
+import * as $DashboardWithPlots from "./islands/DashboardWithPlots.tsx";
+import * as $DataCatalog from "./islands/DataCatalog.tsx";
+import * as $NaturalLanguageQuery from "./islands/NaturalLanguageQuery.tsx";
+import * as $ObservablePlot from "./islands/ObservablePlot.tsx";
 import * as $PageTracker from "./islands/PageTracker.tsx";
 import * as $PieLoading from "./islands/PieLoading.tsx";
+import * as $PivotTable from "./islands/PivotTable.tsx";
 import * as $ScrollToTop from "./islands/ScrollToTop.tsx";
 import * as $ScrollingMenu from "./islands/ScrollingMenu.tsx";
 import * as $SimplePivot from "./islands/SimplePivot.tsx";
@@ -70,8 +76,14 @@ const manifest = {
   islands: {
     "./islands/ContactForm.tsx": $ContactForm,
     "./islands/DashboardData.tsx": $DashboardData,
+    "./islands/DashboardTabs.tsx": $DashboardTabs,
+    "./islands/DashboardWithPlots.tsx": $DashboardWithPlots,
+    "./islands/DataCatalog.tsx": $DataCatalog,
+    "./islands/NaturalLanguageQuery.tsx": $NaturalLanguageQuery,
+    "./islands/ObservablePlot.tsx": $ObservablePlot,
     "./islands/PageTracker.tsx": $PageTracker,
     "./islands/PieLoading.tsx": $PieLoading,
+    "./islands/PivotTable.tsx": $PivotTable,
     "./islands/ScrollToTop.tsx": $ScrollToTop,
     "./islands/ScrollingMenu.tsx": $ScrollingMenu,
     "./islands/SimplePivot.tsx": $SimplePivot,
