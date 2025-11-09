@@ -3,8 +3,8 @@ export type PlanTier = "trial" | "starter" | "premium";
 
 export interface UserContext {
   kind: "user";
-  key: string;  // user ID or email
-  planTier: PlanTier;
+  key: string;
+  plan: PlanTier;  // Changed from planTier to match LD flag targeting
   email?: string;
   name?: string;
 }
@@ -18,7 +18,7 @@ export function createContext(
   return {
     kind: "user",
     key: userId,
-    planTier,
+    plan: planTier,  // Changed from planTier
     email,
     name,
   };

@@ -7,6 +7,7 @@ export default function AppPage() {
       <Head>
         <title>DATA_GATA | Your Data Platform</title>
         <meta name="description" content="Your personal data platform" />
+        <meta http-equiv="refresh" content="3;url=/app/dashboard" />
       </Head>
       
       <div class="min-h-screen bg-gradient-to-br from-[#172217] to-[#186018] flex items-center justify-center">

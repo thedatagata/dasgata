@@ -1,8 +1,11 @@
 import { useEffect, useState } from "preact/hooks";
 import { createMotherDuckClient } from "../utils/motherduck-client.ts";
 
+import { PlanFeatures } from "../utils/launchDarkly.ts";
+
 interface DataCatalogProps {
   motherDuckToken: string;
+  features: PlanFeatures;
 }
 
 interface TableInfo {
@@ -23,7 +26,7 @@ interface ColumnInfo {
   column_default?: string;
 }
 
-export default function DataCatalog({ motherDuckToken }: DataCatalogProps) {
+export default function DataCatalog({ motherDuckToken, features }: DataCatalogProps) {
   const [client, setClient] = useState<any>(null);
   const [wasmTables, setWasmTables] = useState<TableInfo[]>([]);
   const [motherDuckTables, setMotherDuckTables] = useState<TableInfo[]>([]);
@@ -92,7 +95,27 @@ export default function DataCatalog({ motherDuckToken }: DataCatalogProps) {
         AND internal = false
         ORDER BY database_name, schema_name, table_name
       `);
-      setMotherDuckTables(mdResult.data.toRows());
+      
+      // Filter MotherDuck tables by allowed schemas
+      const allMDTables = mdResult.data.toRows();
+      const allowedSchemas = features.schemas || [];
+      
+      console.log('Allowed schemas:', allowedSchemas);
+      console.log('All MD tables before filter:', allMDTables.length);
+      
+      const filteredTables = allMDTables.filter((table: TableInfo) => {
+        const fullTableName = `${table.database}.${table.schema}.${table.table}`;
+        // Check if this table matches any allowed schema pattern
+        return allowedSchemas.some(allowedSchema => {
+          // Support both full table name and schema-level access
+          return fullTableName === allowedSchema || 
+                 fullTableName.startsWith(allowedSchema + '.') ||
+                 `${table.database}.${table.schema}` === allowedSchema;
+        });
+      });
+      
+      console.log('Filtered MD tables:', filteredTables.length);
+      setMotherDuckTables(filteredTables);
 
     } catch (err) {
       console.error('Error loading catalog:', err);
@@ -294,22 +317,45 @@ This queries the remote table over the network.`);
                     </div>
                   </label>
                   
-                  <label class="flex items-start space-x-3 p-3 border border-[#90C137]/30 rounded cursor-pointer hover:bg-[#90C137]/10 transition-colors">
-                    <input
-                      type="radio"
-                      name="loadMode"
-                      value="materialize"
-                      checked={loadMode === "materialize"}
-                      onChange={() => setLoadMode("materialize")}
-                      class="mt-1"
-                    />
-                    <div class="flex-1">
-                      <div class="font-medium text-[#F8F6F0]">💾 Materialize in Browser</div>
-                      <div class="text-sm text-[#F8F6F0]/70 mt-1">
-                        Download data into browser memory. Instant queries. Works offline. Can filter/sample.
+                  {features.hasMaterialization ? (
+                    <label class="flex items-start space-x-3 p-3 border border-[#90C137]/30 rounded cursor-pointer hover:bg-[#90C137]/10 transition-colors">
+                      <input
+                        type="radio"
+                        name="loadMode"
+                        value="materialize"
+                        checked={loadMode === "materialize"}
+                        onChange={() => setLoadMode("materialize")}
+                        class="mt-1"
+                      />
+                      <div class="flex-1">
+                        <div class="font-medium text-[#F8F6F0]">💾 Materialize in Browser</div>
+                        <div class="text-sm text-[#F8F6F0]/70 mt-1">
+                          Download data into browser memory. Instant queries. Works offline. Can filter/sample.
+                        </div>
+                      </div>
+                    </label>
+                  ) : (
+                    <div class="flex items-start space-x-3 p-3 border border-[#90C137]/30 rounded bg-[#F8F6F0]/5 opacity-50">
+                      <input
+                        type="radio"
+                        name="loadMode"
+                        disabled
+                        class="mt-1"
+                      />
+                      <div class="flex-1">
+                        <div class="font-medium text-[#F8F6F0] flex items-center gap-2">
+                          💾 Materialize in Browser
+                          <span class="text-xs text-red-400">🔒 Upgrade Required</span>
+                        </div>
+                        <div class="text-sm text-[#F8F6F0]/70 mt-1">
+                          Download data into browser memory. Instant queries. Works offline.
+                        </div>
+                        <div class="text-xs text-yellow-400 mt-2">
+                          Available on Starter and Premium plans
+                        </div>
                       </div>
                     </div>
-                  </label>
+                  )}
                 </div>
               </div>
 

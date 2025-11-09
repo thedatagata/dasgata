@@ -3,11 +3,6 @@ import { Head } from "$fresh/runtime.ts";
 
 import Nav from "../components/Nav.tsx";
 import Hero from "../components/Hero.tsx";
-import Solutions from "../components/Solutions.tsx";
-import Expertise from "../components/Expertise.tsx";
-import Technologies from "../components/Technologies.tsx";
-import Testimonials from "../components/Testimonials.tsx";
-import Contact from "../components/Contact.tsx";
 import Footer from "../components/Footer.tsx";
 
 export default function Home() {
@@ -26,11 +21,6 @@ export default function Home() {
       <Nav />
       <main>
         <Hero />
-        <Solutions />
-        <Expertise />
-        <Technologies />
-        <Testimonials />
-        <Contact />
       </main>
       <Footer />
     </>

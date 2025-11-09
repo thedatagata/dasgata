@@ -1,0 +1,11 @@
+# .launchdarkly/coderefs.yaml
+projects:
+  - key: thedenogatar
+    dir: .
+    contextLines: 3
+    aliases:
+      - ai-query-provider
+      - pivot-table-access
+      - data-materialization
+      - webllm-access
+      - ai-config

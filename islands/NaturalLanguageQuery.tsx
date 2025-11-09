@@ -1,5 +1,6 @@
 import { useEffect, useState } from "preact/hooks";
 import { createMotherDuckClient } from "../utils/motherduck-client.ts";
+import { trackMetric } from "../utils/launchdarkly-hook.ts";
 
 interface NaturalLanguageQueryProps {
   motherDuckToken: string;
@@ -20,7 +21,6 @@ export default function NaturalLanguageQuery({ motherDuckToken }: NaturalLanguag
   const [error, setError] = useState<string | null>(null);
   const [mode, setMode] = useState<"generate" | "execute">("generate");
   
-  // Table selection
   const [availableTables, setAvailableTables] = useState<TableOption[]>([]);
   const [selectedTable, setSelectedTable] = useState<string>('');
 
@@ -29,8 +29,6 @@ export default function NaturalLanguageQuery({ motherDuckToken }: NaturalLanguag
       try {
         const c = await createMotherDuckClient(motherDuckToken);
         setClient(c);
-        
-        // Fetch available tables
         await loadAvailableTables(c);
       } catch (err) {
         setError(err instanceof Error ? err.message : String(err));
@@ -41,7 +39,6 @@ export default function NaturalLanguageQuery({ motherDuckToken }: NaturalLanguag
 
   async function loadAvailableTables(c: any) {
     try {
-      // Get Browser (WASM) tables
       const wasmQuery = `
         SELECT 
           'memory.main.' || table_name as full_name,
@@ -53,7 +50,6 @@ export default function NaturalLanguageQuery({ motherDuckToken }: NaturalLanguag
       const wasmResult = await c.evaluateQuery(wasmQuery);
       const wasmTables = wasmResult.data.toRows();
 
-      // Get MotherDuck tables
       const mdQuery = `
         SELECT 
           database_name || '.' || schema_name || '.' || table_name as full_name,
@@ -71,7 +67,6 @@ export default function NaturalLanguageQuery({ motherDuckToken }: NaturalLanguag
       const allTables = [...wasmTables, ...mdTables];
       setAvailableTables(allTables);
       
-      // Default to sessions_fct if available
       const defaultTable = allTables.find(t => t.full_name.includes('sessions_fct'));
       if (defaultTable) {
         setSelectedTable(defaultTable.full_name);
@@ -91,9 +86,15 @@ export default function NaturalLanguageQuery({ motherDuckToken }: NaturalLanguag
     setGeneratedSql(null);
     setResultData([]);
 
+    // Track query execution
+    trackMetric('query.executed', 1, {
+      mode,
+      tableSource: selectedTable.includes('memory') ? 'browser' : 'motherduck',
+      feature: 'natural_language_query'
+    });
+
     try {
       if (mode === "generate") {
-        // Generate SQL without executing
         const generateQuery = `CALL prompt_sql('${prompt.replace(/'/g, "''")}', include_tables=['${selectedTable}']);`;
         
         console.log('Generating SQL:', generateQuery);
@@ -105,14 +106,15 @@ export default function NaturalLanguageQuery({ motherDuckToken }: NaturalLanguag
         const sql = sqlRows[0].query;
         setGeneratedSql(sql);
 
-        // Auto-execute the generated SQL
         console.log('Executing generated SQL:', sql);
         const result = await client.evaluateQuery(sql);
         const rows = result.data.toRows();
         setResultData(rows);
 
+        // Track successful query
+        trackMetric('query.succeeded', 1, { mode: 'generate' });
+
       } else {
-        // Execute directly using PRAGMA prompt_query
         const directQuery = `PRAGMA prompt_query('${prompt.replace(/'/g, "''")}')`;
         
         console.log('Direct query:', directQuery);
@@ -120,11 +122,17 @@ export default function NaturalLanguageQuery({ motherDuckToken }: NaturalLanguag
         const rows = result.data.toRows();
         setResultData(rows);
         setGeneratedSql("(SQL generated and executed by MotherDuck AI)");
+
+        // Track successful query
+        trackMetric('query.succeeded', 1, { mode: 'execute' });
       }
 
     } catch (err) {
       console.error('Query error:', err);
       setError(err instanceof Error ? err.message : String(err));
+      
+      // Track failed query
+      trackMetric('query.failed', 1, { mode });
     } finally {
       setLoading(false);
     }
@@ -155,7 +163,6 @@ export default function NaturalLanguageQuery({ motherDuckToken }: NaturalLanguag
         </p>
         
         <div class="space-y-4">
-          {/* Table Selection */}
           <div class="border-b border-[#90C137]/30 pb-4">
             <label class="block text-sm font-medium mb-2 text-[#F8F6F0]">
               Select Data Source:
@@ -191,7 +198,6 @@ export default function NaturalLanguageQuery({ motherDuckToken }: NaturalLanguag
             )}
           </div>
 
-          {/* Mode selector */}
           <div class="flex space-x-4 pb-3 border-b border-[#90C137]/30">
             <label class="flex items-center space-x-2 cursor-pointer">
               <input
@@ -217,7 +223,6 @@ export default function NaturalLanguageQuery({ motherDuckToken }: NaturalLanguag
             </label>
           </div>
 
-          {/* Input area */}
           <div class="flex space-x-2">
             <textarea
               value={prompt}
@@ -237,7 +242,6 @@ export default function NaturalLanguageQuery({ motherDuckToken }: NaturalLanguag
             </button>
           </div>
 
-          {/* Example prompts */}
           <div>
             <p class="text-xs text-[#F8F6F0]/70 mb-2">Example questions:</p>
             <div class="flex flex-wrap gap-2">
@@ -262,15 +266,12 @@ export default function NaturalLanguageQuery({ motherDuckToken }: NaturalLanguag
         )}
       </div>
 
-      {/* Generated SQL */}
       {generatedSql && (
         <div class="bg-[#172217] border border-[#90C137]/30 rounded-lg shadow-lg p-6">
           <div class="flex justify-between items-center mb-3">
             <h3 class="text-lg font-semibold text-[#F8F6F0]">Generated SQL</h3>
             <button
-              onClick={() => {
-                navigator.clipboard.writeText(generatedSql);
-              }}
+              onClick={() => navigator.clipboard.writeText(generatedSql)}
               class="text-xs px-3 py-1 bg-[#F8F6F0]/10 hover:bg-[#90C137]/20 border border-[#90C137]/30 text-[#F8F6F0] rounded transition-colors"
             >
               📋 Copy
@@ -282,7 +283,6 @@ export default function NaturalLanguageQuery({ motherDuckToken }: NaturalLanguag
         </div>
       )}
 
-      {/* Results */}
       {resultData.length > 0 && (
         <div class="bg-[#172217] border border-[#90C137]/30 rounded-lg shadow-lg p-6">
           <div class="flex justify-between items-center mb-4">
@@ -336,7 +336,7 @@ export default function NaturalLanguageQuery({ motherDuckToken }: NaturalLanguag
       )}
 
       {!loading && !error && resultData.length === 0 && !generatedSql && (
-        <div class="bg-[#172217] border border-[#90C137]/30 rounded-lg p-8 text-center">
+        <div class="bg-[#172217] border border-[#90C137]/30 rounded p-8 text-center">
           <p class="text-[#F8F6F0]">
             💡 Select a table above and ask a question about your data in plain English
           </p>

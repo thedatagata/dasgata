@@ -1,10 +1,10 @@
 // routes/onboard.tsx (or API route)
-import { Handlers } from "$fresh/server.ts";
-import ldClient from "../utils/launchdarkly.ts";
-import { createContext, PlanTier } from "../utils/context.ts";
+import { Handlers, HandlerContext } from "$fresh/server.ts";
+import ldClient from "../../../utils/launchDarkly.ts";
+import { createContext, PlanTier } from "../../../utils/context.ts";
 
 export const handler: Handlers = {
-  async POST(req, ctx) {
+  async POST(req: Request, ctx: HandlerContext) {
     const { planTier, userId } = await req.json();
     
     // Store plan in session/cookie/DB

@@ -2,11 +2,8 @@
 import { PageProps } from "$fresh/server.ts";
 import { Head } from "$fresh/runtime.ts";
 import ScrollToTop from "../islands/ScrollToTop.tsx";
-import { config } from "../utils/config.ts";
 
 export default function App({ Component }: PageProps) {
-  const { webContainerId, serverContainerUrl } = config.gtm;
-
   return (
     <>
       <Head>

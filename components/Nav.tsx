@@ -1,6 +1,3 @@
-// Updated to use ScrollingMenu instead of MobileMenu
-import ScrollingMenu from "../islands/ScrollingMenu.tsx";
-
 export default function Nav() {
   return (
     <nav class="fixed w-full z-50 transition-all duration-300 bg-[#172217]/95 backdrop-blur-sm py-3 shadow-md">
@@ -22,28 +19,23 @@ export default function Nav() {
 
           {/* Navigation - Desktop */}
           <div class="hidden md:flex items-center space-x-8">
-            <a href="#about" class="text-[#F8F6F0]/90 hover:text-[#90C137] transition-colors text-sm font-medium">
-              About
-            </a>
-            <a href="#solutions" class="text-[#F8F6F0]/90 hover:text-[#90C137] transition-colors text-sm font-medium">
-              Solutions
-            </a>
-            <a href="#expertise" class="text-[#F8F6F0]/90 hover:text-[#90C137] transition-colors text-sm font-medium">
-              Expertise
-            </a>
-            <a href="#technologies" class="text-[#F8F6F0]/90 hover:text-[#90C137] transition-colors text-sm font-medium">
-              Technologies
-            </a>
             <a 
-              href="#contact" 
+              href="/auth/signin" 
               class="bg-[#90C137] text-[#172217] px-4 py-2 rounded-md text-sm font-medium hover:bg-[#90C137]/90 transition-colors"
             >
-              Contact Us
+              Sign In
             </a>
           </div>
 
-          {/* Updated: Mobile Menu - Using ScrollingMenu island for interactivity */}
-          <ScrollingMenu />
+          {/* Mobile Menu */}
+          <div class="md:hidden">
+            <a 
+              href="/auth/signin" 
+              class="bg-[#90C137] text-[#172217] px-4 py-2 rounded-md text-sm font-medium hover:bg-[#90C137]/90 transition-colors"
+            >
+              Sign In
+            </a>
+          </div>
         </div>
       </div>
     </nav>
