@@ -6,6 +6,7 @@
   },
   "imports": {
     "$fresh/": "https://deno.land/x/fresh@1.7.3/",
+    "@launchdarkly/node-server-sdk": "npm:@launchdarkly/node-server-sdk@^9.10.2",
     "preact": "https://esm.sh/preact@10.22.0",
     "preact/": "https://esm.sh/preact@10.22.0/",
     "preact/jsx-runtime": "https://esm.sh/preact@10.22.0/jsx-runtime",

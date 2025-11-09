@@ -40,7 +40,7 @@ export async function handler(
     // User hasn't completed onboarding, redirect there
     return new Response(null, {
       status: 302,
-      headers: { Location: "/onboarding/department" }
+      headers: { Location: "/onboarding/plans" }
     });
   }
 

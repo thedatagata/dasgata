@@ -2,6 +2,8 @@
 import { Handlers } from "$fresh/server.ts";
 import { getKv } from "../../../utils/db.ts";
 import { getCookies } from "$std/http/cookie.ts";
+import ldClient from "../../../utils/launchDarkly.ts";
+import { createContext, type PlanTier } from "../../../utils/context.ts";
 
 export const handler: Handlers = {
   async POST(req) {
@@ -20,7 +22,7 @@ export const handler: Handlers = {
       // Get user session from KV
       const kv = getKv();
       const sessionData = await kv.get(["user_sessions", userSessionId]);
-      
+
       if (!sessionData?.value) {
         return new Response(JSON.stringify({ error: "Invalid session" }), {
           status: 401,
@@ -29,28 +31,52 @@ export const handler: Handlers = {
       }
 
       const userEmail = (sessionData.value as any).email;
+      const userName = (sessionData.value as any).name;
 
       // Get onboarding data from request
-      const { department, metrics, sources } = await req.json();
+      const body = await req.json();
+      const { plan } = body;
 
-      // Update user record with onboarding data
+      // Validate plan tier
+      const validPlans: PlanTier[] = ["trial", "starter", "premium"];
+      if (!plan || !validPlans.includes(plan)) {
+        return new Response(JSON.stringify({ error: "Invalid plan tier" }), {
+          status: 400,
+          headers: { "Content-Type": "application/json" }
+        });
+      }
+
+      // Update user record with plan selection
       await kv.set(["users", userEmail], {
         email: userEmail,
-        name: (sessionData.value as any).name,
+        name: userName,
         picture: (sessionData.value as any).picture,
         createdAt: (sessionData.value as any).createdAt || Date.now(),
         onboardingCompleted: true,
         onboardingCompletedAt: Date.now(),
-        department,
-        metrics,
-        sources
+        planTier: plan as PlanTier
       });
 
-      console.log(`Onboarding completed for ${userEmail}: ${department}, ${metrics.length} metrics, ${sources.length} sources`);
+      // Create LaunchDarkly context for the user
+      const ldContext = createContext(userEmail, plan as PlanTier, userEmail, userName);
 
-      return new Response(JSON.stringify({ 
+      // Evaluate feature flags for the user's plan (optional - for immediate feedback)
+      const features = {
+        advancedAnalytics: await ldClient.variation("advanced-analytics", ldContext, false),
+        aiInsights: await ldClient.variation("ai-insights", ldContext, false),
+        apiAccess: await ldClient.variation("api-access", ldContext, false),
+        unlimitedSources: await ldClient.variation("unlimited-sources", ldContext, false),
+        prioritySupport: await ldClient.variation("priority-support", ldContext, false),
+      };
+
+      console.log(`Onboarding completed for ${userEmail}: ${plan} plan`);
+      console.log(`Features enabled:`, features);
+
+      return new Response(JSON.stringify({
         success: true,
-        message: "Onboarding completed successfully"
+        message: "Onboarding completed successfully",
+        planTier: plan,
+        features
       }), {
         status: 200,
         headers: { "Content-Type": "application/json" }
@@ -58,9 +84,9 @@ export const handler: Handlers = {
 
     } catch (error) {
       console.error("Error completing onboarding:", error);
-      return new Response(JSON.stringify({ 
+      return new Response(JSON.stringify({
         error: "Internal server error",
-        details: error.message 
+        details: error.message
       }), {
         status: 500,
         headers: { "Content-Type": "application/json" }
