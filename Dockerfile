@@ -1,6 +1,6 @@
 FROM denoland/deno:2.5.6
 
-WORKDIR /app
+WORKDIR ./
 COPY . .
 
 # Cache dependencies
