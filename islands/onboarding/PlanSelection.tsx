@@ -71,7 +71,8 @@ export default function PlanSelection() {
       if (response.ok) {
         const data = await response.json();
         console.log('Plan selected successfully:', data);
-        window.location.href = '/app';
+        // Use the redirect URL from the response
+        window.location.href = data.redirectUrl || '/app/loading';
       } else {
         const error = await response.json();
         alert(`Error selecting plan: ${error.error || 'Please try again.'}`);

@@ -6,38 +6,16 @@ import DataCatalog from "./DataCatalog.tsx";
 
 interface DashboardTabsProps {
   motherDuckToken: string;
-  plan: string;
-  email: string;
 }
 
-export default function DashboardTabs({ motherDuckToken, plan, email }: DashboardTabsProps) {
+export default function DashboardTabs({ motherDuckToken }: DashboardTabsProps) {
   const [activeTab, setActiveTab] = useState<"nl" | "pivot" | "charts" | "catalog">("nl");
 
   const tabs = [
-    { 
-      id: "nl", 
-      label: "🤖 AI Query", 
-      description: "Ask questions in plain English",
-      enabled: true // Always available for now
-    },
-    { 
-      id: "pivot", 
-      label: "📊 Pivot Table", 
-      description: "Explore with dimensions & measures",
-      enabled: true
-    },
-    { 
-      id: "charts", 
-      label: "📈 Time Series", 
-      description: "View trends over time",
-      enabled: true
-    },
-    { 
-      id: "catalog", 
-      label: "📚 Data Catalog", 
-      description: "Browse & load tables",
-      enabled: true
-    },
+    { id: "nl", label: "🤖 AI Query", description: "Ask questions in plain English" },
+    { id: "pivot", label: "📊 Pivot Table", description: "Explore with dimensions & measures" },
+    { id: "charts", label: "📈 Time Series", description: "View trends over time" },
+    { id: "catalog", label: "📚 Data Catalog", description: "Browse & load tables" },
   ];
 
   return (
@@ -49,11 +27,9 @@ export default function DashboardTabs({ motherDuckToken, plan, email }: Dashboar
             {tabs.map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => tab.enabled && setActiveTab(tab.id as any)}
-                disabled={!tab.enabled}
+                onClick={() => setActiveTab(tab.id as any)}
                 class={`
                   flex-1 py-4 px-6 text-center border-b-2 font-medium text-sm transition-all duration-300
-                  ${!tab.enabled ? 'opacity-40 cursor-not-allowed' : ''}
                   ${activeTab === tab.id
                     ? 'border-[#90C137] text-[#90C137] bg-[#90C137]/10'
                     : 'border-transparent text-[#F8F6F0]/70 hover:text-[#90C137] hover:bg-[#F8F6F0]/5'
@@ -75,24 +51,16 @@ export default function DashboardTabs({ motherDuckToken, plan, email }: Dashboar
       {/* Tab Content */}
       <div>
         {activeTab === "nl" && (
-          <NaturalLanguageQuery 
-            motherDuckToken={motherDuckToken}
-          />
+          <NaturalLanguageQuery motherDuckToken={motherDuckToken} />
         )}
         {activeTab === "pivot" && (
-          <PivotTable 
-            motherDuckToken={motherDuckToken}
-          />
+          <PivotTable motherDuckToken={motherDuckToken} />
         )}
         {activeTab === "charts" && (
-          <DashboardWithPlots 
-            motherDuckToken={motherDuckToken}
-          />
+          <DashboardWithPlots motherDuckToken={motherDuckToken} />
         )}
         {activeTab === "catalog" && (
-          <DataCatalog 
-            motherDuckToken={motherDuckToken}
-          />
+          <DataCatalog motherDuckToken={motherDuckToken} />
         )}
       </div>
     </div>
