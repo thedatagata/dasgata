@@ -1,24 +1,13 @@
 // routes/auth/callback.ts
 import { Handlers } from "$fresh/server.ts";
-import { createGoogleOAuthConfig, createHelpers } from "@deno/kv-oauth";
+import { getUserOAuth } from "../../utils/oauth.ts";
 import { getKv } from "../../utils/db.ts";
 import { config } from "../../utils/config.ts";
-
-const isLocalDevelopment = Deno.env.get("DENO_DEPLOYMENT_ID") === undefined;
-
-const userOAuthConfig = createGoogleOAuthConfig({
-  redirectUri: isLocalDevelopment 
-    ? "http://localhost:8000/auth/callback"
-    : "https://gata-swamp.io/auth/callback",
-  scope: "https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email"
-});
-
-const { handleCallback } = createHelpers(userOAuthConfig);
 
 export const handler: Handlers = {
   async GET(req) {
     try {
-      const { response, sessionId, tokens } = await handleCallback(req);
+      const { response, sessionId, tokens } = await getUserOAuth().handleCallback(req);
       console.log("Session ID:", sessionId);
       console.log("Tokens:", tokens);
 

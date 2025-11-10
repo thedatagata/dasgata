@@ -1,11 +1,8 @@
 import { useEffect, useState } from "preact/hooks";
 import { createMotherDuckClient } from "../utils/motherduck-client.ts";
 
-import { PlanFeatures } from "../utils/launchDarkly.ts";
-
 interface DataCatalogProps {
   motherDuckToken: string;
-  features: PlanFeatures;
 }
 
 interface TableInfo {
@@ -26,7 +23,7 @@ interface ColumnInfo {
   column_default?: string;
 }
 
-export default function DataCatalog({ motherDuckToken, features }: DataCatalogProps) {
+export default function DataCatalog({ motherDuckToken }: DataCatalogProps) {
   const [client, setClient] = useState<any>(null);
   const [wasmTables, setWasmTables] = useState<TableInfo[]>([]);
   const [motherDuckTables, setMotherDuckTables] = useState<TableInfo[]>([]);

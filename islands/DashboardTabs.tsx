@@ -4,14 +4,13 @@ import NaturalLanguageQuery from "./NaturalLanguageQuery.tsx";
 import DashboardWithPlots from "./DashboardWithPlots.tsx";
 import DataCatalog from "./DataCatalog.tsx";
 
-import { PlanFeatures } from "../utils/launchDarkly.ts";
-
 interface DashboardTabsProps {
   motherDuckToken: string;
-  features: PlanFeatures;
+  plan: string;
+  email: string;
 }
 
-export default function DashboardTabs({ motherDuckToken, features }: DashboardTabsProps) {
+export default function DashboardTabs({ motherDuckToken, plan, email }: DashboardTabsProps) {
   const [activeTab, setActiveTab] = useState<"nl" | "pivot" | "charts" | "catalog">("nl");
 
   const tabs = [
@@ -19,39 +18,30 @@ export default function DashboardTabs({ motherDuckToken, features }: DashboardTa
       id: "nl", 
       label: "🤖 AI Query", 
       description: "Ask questions in plain English",
-      enabled: true // Always available
+      enabled: true // Always available for now
     },
     { 
       id: "pivot", 
       label: "📊 Pivot Table", 
       description: "Explore with dimensions & measures",
-      enabled: features.hasPivotTables
+      enabled: true
     },
     { 
       id: "charts", 
       label: "📈 Time Series", 
       description: "View trends over time",
-      enabled: features.hasVisualization
+      enabled: true
     },
     { 
       id: "catalog", 
       label: "📚 Data Catalog", 
       description: "Browse & load tables",
-      enabled: features.hasDataCatalog
+      enabled: true
     },
   ];
 
   return (
     <div class="space-y-6">
-      {/* Feature Banner */}
-      {!features.hasWebLLM && (
-        <div class="bg-yellow-900/20 border border-yellow-500/50 rounded-lg p-4">
-          <p class="text-yellow-200">
-            🔒 <strong>Upgrade to Premium</strong> to unlock WebLLM for privacy-first AI queries on local data
-          </p>
-        </div>
-      )}
-
       {/* Tabs Navigation */}
       <div class="bg-[#172217]/60 backdrop-blur-sm rounded-lg shadow-xl border border-[#90C137]/20">
         <div class="border-b border-[#90C137]/20">
@@ -75,7 +65,6 @@ export default function DashboardTabs({ motherDuckToken, features }: DashboardTa
                   <span class={`text-xs ${activeTab === tab.id ? 'text-[#90C137]/80' : 'text-[#F8F6F0]/50'}`}>
                     {tab.description}
                   </span>
-                  {!tab.enabled && <span class="text-xs text-red-400">🔒 Locked</span>}
                 </div>
               </button>
             ))}
@@ -88,25 +77,21 @@ export default function DashboardTabs({ motherDuckToken, features }: DashboardTa
         {activeTab === "nl" && (
           <NaturalLanguageQuery 
             motherDuckToken={motherDuckToken}
-            features={features}
           />
         )}
-        {activeTab === "pivot" && features.hasPivotTables && (
+        {activeTab === "pivot" && (
           <PivotTable 
             motherDuckToken={motherDuckToken}
-            features={features}
           />
         )}
-        {activeTab === "charts" && features.hasVisualization && (
+        {activeTab === "charts" && (
           <DashboardWithPlots 
             motherDuckToken={motherDuckToken}
-            features={features}
           />
         )}
-        {activeTab === "catalog" && features.hasDataCatalog && (
+        {activeTab === "catalog" && (
           <DataCatalog 
             motherDuckToken={motherDuckToken}
-            features={features}
           />
         )}
       </div>

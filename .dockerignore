@@ -1,0 +1,13 @@
+.git
+.github
+node_modules
+_fresh
+*.log
+.env.local
+.env
+*.md
+README.md
+traffic-results-*.json
+.DS_Store
+.vscode
+.idea

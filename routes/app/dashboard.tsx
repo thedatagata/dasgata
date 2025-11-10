@@ -1,13 +1,11 @@
 import { Handlers, PageProps } from "$fresh/server.ts";
 import { Head } from "$fresh/runtime.ts";
 import DashboardTabs from "../../islands/DashboardTabs.tsx";
-import { getPlanFeatures, PlanFeatures } from "../../utils/launchDarkly.ts";
 
 interface DashboardData {
   email: string;
   plan: string;
   motherDuckToken: string;
-  features: PlanFeatures;
 }
 
 export const handler: Handlers<DashboardData> = {
@@ -16,13 +14,10 @@ export const handler: Handlers<DashboardData> = {
     const email = ctx.state.email || "user@example.com";
     const plan = ctx.state.plan || "trial";
     
-    const features = await getPlanFeatures(email, plan);
-    
     return ctx.render({
       email,
       plan,
       motherDuckToken: Deno.env.get("MOTHERDUCK_TOKEN") || "",
-      features
     });
   },
 };
@@ -45,7 +40,8 @@ export default function Dashboard({ data }: PageProps<DashboardData>) {
           
           <DashboardTabs 
             motherDuckToken={data.motherDuckToken}
-            features={data.features}
+            plan={data.plan}
+            email={data.email}
           />
         </div>
       </div>

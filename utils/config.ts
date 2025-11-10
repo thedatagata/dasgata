@@ -1,14 +1,20 @@
+const isBuild = Deno.env.get("BUILD_PHASE") === "true";
+
+function getEnv(key: string, fallback = ""): string {
+  return isBuild ? fallback : (Deno.env.get(key) || fallback);
+}
+
 export const config = {
   admin: {
-    email: Deno.env.get("ADMIN_EMAIL") || "thedatagata@gmail.com"
+    email: getEnv("ADMIN_EMAIL", "thedatagata@gmail.com")
   },
   session: {
-    secret: Deno.env.get("SESSION_SECRET"),
+    secret: getEnv("SESSION_SECRET", "build-secret"),
     cookieName: "data_gata_session",
     maxAge: 86400,
   },
   oauth: {
-    googleClientId: Deno.env.get("GOOGLE_CLIENT_ID"),
-    googleClientSecret: Deno.env.get("GOOGLE_CLIENT_SECRET"),
+    googleClientId: getEnv("GOOGLE_CLIENT_ID"),
+    googleClientSecret: getEnv("GOOGLE_CLIENT_SECRET"),
   }
 };

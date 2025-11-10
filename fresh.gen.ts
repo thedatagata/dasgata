@@ -11,7 +11,6 @@ import * as $admin_oauth_signin from "./routes/admin/oauth/signin.ts";
 import * as $admin_oauth_signout from "./routes/admin/oauth/signout.ts";
 import * as $admin_users from "./routes/admin/users.tsx";
 import * as $api_onboarding_complete from "./routes/api/onboarding/complete.ts";
-import * as $api_onboarding_onboard from "./routes/api/onboarding/onboard.ts";
 import * as $api_query from "./routes/api/query.ts";
 import * as $api_track from "./routes/api/track.ts";
 import * as $app_middleware from "./routes/app/_middleware.ts";
@@ -21,6 +20,7 @@ import * as $app_loading from "./routes/app/loading.tsx";
 import * as $auth_callback from "./routes/auth/callback.ts";
 import * as $auth_signin from "./routes/auth/signin.ts";
 import * as $auth_signout from "./routes/auth/signout.ts";
+import * as $health from "./routes/health.ts";
 import * as $index from "./routes/index.tsx";
 import * as $onboarding_middleware from "./routes/onboarding/_middleware.ts";
 import * as $onboarding_plans from "./routes/onboarding/plans.tsx";
@@ -50,7 +50,6 @@ const manifest = {
     "./routes/admin/oauth/signout.ts": $admin_oauth_signout,
     "./routes/admin/users.tsx": $admin_users,
     "./routes/api/onboarding/complete.ts": $api_onboarding_complete,
-    "./routes/api/onboarding/onboard.ts": $api_onboarding_onboard,
     "./routes/api/query.ts": $api_query,
     "./routes/api/track.ts": $api_track,
     "./routes/app/_middleware.ts": $app_middleware,
@@ -60,6 +59,7 @@ const manifest = {
     "./routes/auth/callback.ts": $auth_callback,
     "./routes/auth/signin.ts": $auth_signin,
     "./routes/auth/signout.ts": $auth_signout,
+    "./routes/health.ts": $health,
     "./routes/index.tsx": $index,
     "./routes/onboarding/_middleware.ts": $onboarding_middleware,
     "./routes/onboarding/plans.tsx": $onboarding_plans,

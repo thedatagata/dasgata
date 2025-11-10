@@ -1,12 +1,12 @@
 // routes/api/query.ts
 import { Handlers } from "$fresh/server.ts";
-import ldClient from "../../utils/launchdarkly.ts";
+import { getLDClient, trackEvent } from '../../utils/launchdarkly.ts';
 
 export const handler: Handlers = {
   async POST(req, ctx) {
     const ldContext = ctx.state.ldContext;
     
-    // Check if user has access to AI queries
+    const ldClient = getLDClient();
     const hasAIAccess = await ldClient.variation(
       "ai-query-access",
       ldContext,
