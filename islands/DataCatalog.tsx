@@ -1,5 +1,6 @@
 import { useEffect, useState } from "preact/hooks";
 import { createMotherDuckClient } from "../utils/motherduck-client.ts";
+import { TableConfigManager } from "../utils/table-config.ts";
 
 interface DataCatalogProps {
   motherDuckToken: string;
@@ -13,6 +14,7 @@ interface TableInfo {
   column_count: number;
   size_bytes?: number;
   comment?: string;
+  description?: string; // AI description from prompt_schema
 }
 
 interface ColumnInfo {
@@ -87,32 +89,29 @@ export default function DataCatalog({ motherDuckToken }: DataCatalogProps) {
           column_count,
           comment
         FROM duckdb_tables()
-        WHERE database_name != 'memory'
-        AND database_name NOT IN ('system', 'temp')
+        WHERE database_name = 'my_db'
         AND internal = false
-        ORDER BY database_name, schema_name, table_name
+        ORDER BY schema_name, table_name
       `);
       
-      // Filter MotherDuck tables by allowed schemas
-      const allMDTables = mdResult.data.toRows();
-      const allowedSchemas = features.schemas || [];
+      const tables = mdResult.data.toRows();
       
-      console.log('Allowed schemas:', allowedSchemas);
-      console.log('All MD tables before filter:', allMDTables.length);
+      // Get AI descriptions for each table
+      for (const table of tables) {
+        try {
+          const descResult = await c.evaluateQuery(
+            `CALL prompt_schema(include_tables=['${table.schema}.${table.table}'])`
+          );
+          const descRows = descResult.data.toRows();
+          if (descRows.length > 0 && descRows[0].summary) {
+            table.description = descRows[0].summary;
+          }
+        } catch (err) {
+          console.warn(`Failed to get description for ${table.table}:`, err);
+        }
+      }
       
-      const filteredTables = allMDTables.filter((table: TableInfo) => {
-        const fullTableName = `${table.database}.${table.schema}.${table.table}`;
-        // Check if this table matches any allowed schema pattern
-        return allowedSchemas.some(allowedSchema => {
-          // Support both full table name and schema-level access
-          return fullTableName === allowedSchema || 
-                 fullTableName.startsWith(allowedSchema + '.') ||
-                 `${table.database}.${table.schema}` === allowedSchema;
-        });
-      });
-      
-      console.log('Filtered MD tables:', filteredTables.length);
-      setMotherDuckTables(filteredTables);
+      setMotherDuckTables(tables);
 
     } catch (err) {
       console.error('Error loading catalog:', err);
@@ -189,21 +188,35 @@ export default function DataCatalog({ motherDuckToken }: DataCatalogProps) {
     setLoadingData(true);
     try {
       if (loadMode === "stream") {
-        alert(`✅ ${loadDialogTable.database}.${loadDialogTable.schema}.${loadDialogTable.table} is already available for streaming queries!
+        // Configure as streaming table
+        TableConfigManager.configureTable(
+          `${loadDialogTable.database}.${loadDialogTable.schema}.${loadDialogTable.table}`,
+          'stream',
+          'motherduck'
+        );
         
-Use it in queries like:
-SELECT * FROM ${loadDialogTable.database}.${loadDialogTable.schema}.${loadDialogTable.table}
-
-This queries the remote table over the network.`);
+        alert(`✅ ${loadDialogTable.database}.${loadDialogTable.schema}.${loadDialogTable.table} configured for streaming!
+        
+This table is now available for queries across all tabs.
+Queries will access the remote table over the network.`);
       } else {
         await client.evaluateQuery(`
           CREATE OR REPLACE TABLE memory.main.${targetTableName} AS 
           ${materializeQuery}
         `);
         
+        // Configure as materialized table
+        TableConfigManager.configureTable(
+          `memory.main.${targetTableName}`,
+          'materialize',
+          'browser'
+        );
+        
         await loadCatalogData(client);
         setView("wasm");
-        alert(`✅ Materialized ${targetTableName} in browser memory!`);
+        alert(`✅ Materialized ${targetTableName} in browser memory!
+        
+This table is now available for queries across all tabs.`);
       }
       
       setShowLoadDialog(false);
@@ -314,45 +327,22 @@ This queries the remote table over the network.`);
                     </div>
                   </label>
                   
-                  {features.hasMaterialization ? (
-                    <label class="flex items-start space-x-3 p-3 border border-[#90C137]/30 rounded cursor-pointer hover:bg-[#90C137]/10 transition-colors">
-                      <input
-                        type="radio"
-                        name="loadMode"
-                        value="materialize"
-                        checked={loadMode === "materialize"}
-                        onChange={() => setLoadMode("materialize")}
-                        class="mt-1"
-                      />
-                      <div class="flex-1">
-                        <div class="font-medium text-[#F8F6F0]">💾 Materialize in Browser</div>
-                        <div class="text-sm text-[#F8F6F0]/70 mt-1">
-                          Download data into browser memory. Instant queries. Works offline. Can filter/sample.
-                        </div>
-                      </div>
-                    </label>
-                  ) : (
-                    <div class="flex items-start space-x-3 p-3 border border-[#90C137]/30 rounded bg-[#F8F6F0]/5 opacity-50">
-                      <input
-                        type="radio"
-                        name="loadMode"
-                        disabled
-                        class="mt-1"
-                      />
-                      <div class="flex-1">
-                        <div class="font-medium text-[#F8F6F0] flex items-center gap-2">
-                          💾 Materialize in Browser
-                          <span class="text-xs text-red-400">🔒 Upgrade Required</span>
-                        </div>
-                        <div class="text-sm text-[#F8F6F0]/70 mt-1">
-                          Download data into browser memory. Instant queries. Works offline.
-                        </div>
-                        <div class="text-xs text-yellow-400 mt-2">
-                          Available on Starter and Premium plans
-                        </div>
+                  <label class="flex items-start space-x-3 p-3 border border-[#90C137]/30 rounded cursor-pointer hover:bg-[#90C137]/10 transition-colors">
+                    <input
+                      type="radio"
+                      name="loadMode"
+                      value="materialize"
+                      checked={loadMode === "materialize"}
+                      onChange={() => setLoadMode("materialize")}
+                      class="mt-1"
+                    />
+                    <div class="flex-1">
+                      <div class="font-medium text-[#F8F6F0]">💾 Materialize in Browser</div>
+                      <div class="text-sm text-[#F8F6F0]/70 mt-1">
+                        Download data into browser memory. Instant queries. Works offline. Can filter/sample.
                       </div>
                     </div>
-                  )}
+                  </label>
                 </div>
               </div>
 
@@ -385,23 +375,23 @@ This queries the remote table over the network.`);
                       class="w-full px-3 py-2 bg-[#172217]/60 border border-[#90C137]/30 rounded font-mono text-sm text-[#90C137] placeholder-[#F8F6F0]/40 focus:border-[#90C137] focus:outline-none"
                       placeholder="SELECT * FROM table WHERE ..."
                     />
-                    <div class="mt-2 space-y-1 text-xs text-gray-600">
+                    <div class="mt-2 space-y-1 text-xs text-[#F8F6F0]/60">
                       <p>💡 Examples:</p>
                       <button
                         onClick={() => setMaterializeQuery(`SELECT * FROM ${loadDialogTable.database}.${loadDialogTable.schema}.${loadDialogTable.table} LIMIT 10000`)}
-                        class="block text-blue-600 hover:underline"
+                        class="block text-[#90C137] hover:text-[#A8D84E] hover:underline"
                       >
                         • Sample first 10K rows
                       </button>
                       <button
                         onClick={() => setMaterializeQuery(`SELECT * FROM ${loadDialogTable.database}.${loadDialogTable.schema}.${loadDialogTable.table} WHERE session_date >= '2024-01-01'`)}
-                        class="block text-blue-600 hover:underline"
+                        class="block text-[#90C137] hover:text-[#A8D84E] hover:underline"
                       >
                         • Filter recent data only
                       </button>
                       <button
                         onClick={() => setMaterializeQuery(`SELECT * FROM ${loadDialogTable.database}.${loadDialogTable.schema}.${loadDialogTable.table} USING SAMPLE 10%`)}
-                        class="block text-blue-600 hover:underline"
+                        class="block text-[#90C137] hover:text-[#A8D84E] hover:underline"
                       >
                         • Random 10% sample
                       </button>
@@ -510,9 +500,14 @@ This queries the remote table over the network.`);
                           </span>
                           
                           <div class="flex-1">
-                            <div class="font-medium text-[#F8F6F0]">
+                            <div class="font-medium text-[#90C137]">
                               {table.database}.{table.schema}.{table.table}
                             </div>
+                            {table.description && (
+                              <div class="text-sm text-[#F8F6F0]/90 mt-1 leading-relaxed">
+                                {table.description}
+                              </div>
+                            )}
                             <div class="text-xs text-[#F8F6F0]/60 mt-1">
                               {table.row_count?.toLocaleString() || "0"} rows · {table.column_count} columns
                             </div>
@@ -547,23 +542,23 @@ This queries the remote table over the network.`);
                           </div>
                         ) : (
                           <div class="p-4">
-                            <div class="text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">
+                            <div class="text-xs font-semibold text-[#90C137]/70 mb-2 uppercase tracking-wide">
                               Columns ({expandedColumns.length})
                             </div>
                             <div class="space-y-2">
                               {expandedColumns.map((col) => (
                                 <div key={col.column_name} class="flex items-start space-x-2 text-sm">
                                   <div class="w-4 h-4 mt-0.5 flex-shrink-0">
-                                    <span class="text-gray-400">•</span>
+                                    <span class="text-[#90C137]/60">•</span>
                                   </div>
                                   <div class="flex-1">
-                                    <span class="font-mono font-medium text-gray-900">{col.column_name}</span>
-                                    <span class="text-gray-500 ml-2">
+                                    <span class="font-mono font-medium text-[#F8F6F0]">{col.column_name}</span>
+                                    <span class="text-[#F8F6F0]/60 ml-2">
                                       {col.data_type}
                                       {col.is_nullable && " · nullable"}
                                     </span>
                                     {col.column_default && (
-                                      <div class="text-xs text-gray-500 ml-4 mt-0.5">
+                                      <div class="text-xs text-[#F8F6F0]/50 ml-4 mt-0.5">
                                         default: {col.column_default}
                                       </div>
                                     )}

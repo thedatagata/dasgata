@@ -10,8 +10,19 @@ import * as $admin_oauth_callback from "./routes/admin/oauth/callback.ts";
 import * as $admin_oauth_signin from "./routes/admin/oauth/signin.ts";
 import * as $admin_oauth_signout from "./routes/admin/oauth/signout.ts";
 import * as $admin_users from "./routes/admin/users.tsx";
+import * as $api_analytics_approve from "./routes/api/analytics/approve.ts";
+import * as $api_analytics_profile from "./routes/api/analytics/profile.ts";
+import * as $api_analytics_query from "./routes/api/analytics/query.ts";
+import * as $api_metadata_get_table from "./routes/api/metadata/get-table.ts";
+import * as $api_metadata_get_tables from "./routes/api/metadata/get-tables.ts";
+import * as $api_metadata_register_table from "./routes/api/metadata/register-table.ts";
+import * as $api_metadata_stats from "./routes/api/metadata/stats.ts";
 import * as $api_onboarding_complete from "./routes/api/onboarding/complete.ts";
+import * as $api_query_enhanced from "./routes/api/query-enhanced.ts";
 import * as $api_query from "./routes/api/query.ts";
+import * as $api_query_approve from "./routes/api/query/approve.ts";
+import * as $api_query_cache from "./routes/api/query/cache.ts";
+import * as $api_query_find_similar from "./routes/api/query/find-similar.ts";
 import * as $api_track from "./routes/api/track.ts";
 import * as $app_middleware from "./routes/app/_middleware.ts";
 import * as $app_dashboard from "./routes/app/dashboard.tsx";
@@ -24,18 +35,14 @@ import * as $health from "./routes/health.ts";
 import * as $index from "./routes/index.tsx";
 import * as $onboarding_middleware from "./routes/onboarding/_middleware.ts";
 import * as $onboarding_plans from "./routes/onboarding/plans.tsx";
-import * as $DashboardData from "./islands/DashboardData.tsx";
-import * as $DashboardTabs from "./islands/DashboardTabs.tsx";
-import * as $DashboardWithPlots from "./islands/DashboardWithPlots.tsx";
 import * as $DataCatalog from "./islands/DataCatalog.tsx";
-import * as $NaturalLanguageQuery from "./islands/NaturalLanguageQuery.tsx";
 import * as $ObservablePlot from "./islands/ObservablePlot.tsx";
 import * as $PieLoading from "./islands/PieLoading.tsx";
-import * as $PivotTable from "./islands/PivotTable.tsx";
 import * as $PlanSelection from "./islands/PlanSelection.tsx";
+import * as $QueryHistory from "./islands/QueryHistory.tsx";
 import * as $ScrollToTop from "./islands/ScrollToTop.tsx";
 import * as $ScrollingMenu from "./islands/ScrollingMenu.tsx";
-import * as $SimplePivot from "./islands/SimplePivot.tsx";
+import * as $SmartDashboard from "./islands/SmartDashboard.tsx";
 import * as $onboarding_PlanSelection from "./islands/onboarding/PlanSelection.tsx";
 import type { Manifest } from "$fresh/server.ts";
 
@@ -49,8 +56,19 @@ const manifest = {
     "./routes/admin/oauth/signin.ts": $admin_oauth_signin,
     "./routes/admin/oauth/signout.ts": $admin_oauth_signout,
     "./routes/admin/users.tsx": $admin_users,
+    "./routes/api/analytics/approve.ts": $api_analytics_approve,
+    "./routes/api/analytics/profile.ts": $api_analytics_profile,
+    "./routes/api/analytics/query.ts": $api_analytics_query,
+    "./routes/api/metadata/get-table.ts": $api_metadata_get_table,
+    "./routes/api/metadata/get-tables.ts": $api_metadata_get_tables,
+    "./routes/api/metadata/register-table.ts": $api_metadata_register_table,
+    "./routes/api/metadata/stats.ts": $api_metadata_stats,
     "./routes/api/onboarding/complete.ts": $api_onboarding_complete,
+    "./routes/api/query-enhanced.ts": $api_query_enhanced,
     "./routes/api/query.ts": $api_query,
+    "./routes/api/query/approve.ts": $api_query_approve,
+    "./routes/api/query/cache.ts": $api_query_cache,
+    "./routes/api/query/find-similar.ts": $api_query_find_similar,
     "./routes/api/track.ts": $api_track,
     "./routes/app/_middleware.ts": $app_middleware,
     "./routes/app/dashboard.tsx": $app_dashboard,
@@ -65,18 +83,14 @@ const manifest = {
     "./routes/onboarding/plans.tsx": $onboarding_plans,
   },
   islands: {
-    "./islands/DashboardData.tsx": $DashboardData,
-    "./islands/DashboardTabs.tsx": $DashboardTabs,
-    "./islands/DashboardWithPlots.tsx": $DashboardWithPlots,
     "./islands/DataCatalog.tsx": $DataCatalog,
-    "./islands/NaturalLanguageQuery.tsx": $NaturalLanguageQuery,
     "./islands/ObservablePlot.tsx": $ObservablePlot,
     "./islands/PieLoading.tsx": $PieLoading,
-    "./islands/PivotTable.tsx": $PivotTable,
     "./islands/PlanSelection.tsx": $PlanSelection,
+    "./islands/QueryHistory.tsx": $QueryHistory,
     "./islands/ScrollToTop.tsx": $ScrollToTop,
     "./islands/ScrollingMenu.tsx": $ScrollingMenu,
-    "./islands/SimplePivot.tsx": $SimplePivot,
+    "./islands/SmartDashboard.tsx": $SmartDashboard,
     "./islands/onboarding/PlanSelection.tsx": $onboarding_PlanSelection,
   },
   baseUrl: import.meta.url,

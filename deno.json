@@ -6,6 +6,7 @@
   },
   "imports": {
     "$fresh/": "https://deno.land/x/fresh@1.7.3/",
+    "@mlc-ai/web-llm": "npm:@mlc-ai/web-llm@^0.2.72",
     "@launchdarkly/observability-node": "npm:@launchdarkly/observability-node@^0.3.1",
     "launchdarkly-node-client-sdk": "npm:launchdarkly-node-client-sdk@^3.3.0",
     "preact": "https://esm.sh/preact@10.22.0",
@@ -14,6 +15,7 @@
     "preact-render-to-string": "https://esm.sh/*preact-render-to-string@6.2.2",
     "@preact/signals": "https://esm.sh/*@preact/signals@1.2.2",
     "@preact/signals-core": "https://esm.sh/*@preact/signals-core@1.5.1",
+    "sharp": "npm:sharp@^0.34.5",
     "twind": "https://esm.sh/twind@0.16.19",
     "twind/": "https://esm.sh/twind@0.16.19/",
     "@std/": "https://deno.land/std@0.213.0/",
