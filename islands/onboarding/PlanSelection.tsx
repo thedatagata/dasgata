@@ -15,45 +15,33 @@ export default function PlanSelection() {
 
   const plans: Plan[] = [
     {
-      id: "trial",
-      name: "Trial",
-      price: "Free for 14 days",
+      id: "base",
+      name: "Base",
+      price: "$49/month",
       features: [
-        "Up to 10,000 events/month",
-        "Basic analytics",
-        "2 data sources",
+        "Streaming data from MotherDuck",
+        "MotherDuck AI query generation",
+        "Basic analytics & visualizations",
+        "Up to 100,000 events/month",
         "Community support"
       ],
       color: "from-blue-500 to-blue-600"
-    },
-    {
-      id: "starter",
-      name: "Starter",
-      price: "$49/month",
-      features: [
-        "Up to 100,000 events/month",
-        "Advanced analytics",
-        "10 data sources",
-        "Email support",
-        "Custom dashboards"
-      ],
-      color: "from-[#90C137] to-[#186018]",
-      recommended: true
     },
     {
       id: "premium",
       name: "Premium",
       price: "$199/month",
       features: [
+        "Everything in Base, plus:",
+        "WebLLM AI-powered insights",
+        "DuckDB-WASM materialization",
+        "Advanced semantic layer",
         "Unlimited events",
-        "AI-powered insights",
-        "Unlimited data sources",
         "Priority support",
-        "Custom dashboards",
-        "API access",
-        "SSO & advanced security"
+        "API access"
       ],
-      color: "from-purple-500 to-purple-600"
+      color: "from-[#90C137] to-[#186018]",
+      recommended: true
     }
   ];
 
@@ -69,13 +57,9 @@ export default function PlanSelection() {
       });
 
       if (response.ok) {
-        const data = await response.json();
-        console.log('Plan selected successfully:', data);
-        // Use the redirect URL from the response
-        window.location.href = data.redirectUrl || '/app/loading';
+        window.location.href = planId === 'premium' ? '/app/loading' : '/app/dashboard';
       } else {
-        const error = await response.json();
-        alert(`Error selecting plan: ${error.error || 'Please try again.'}`);
+        alert('Error selecting plan. Please try again.');
         setIsLoading(false);
       }
     } catch (error) {
@@ -86,8 +70,7 @@ export default function PlanSelection() {
   };
 
   return (
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-      {/* Header */}
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
       <div class="text-center mb-16">
         <h1 class="text-5xl md:text-6xl font-bold text-[#F8F6F0] mb-4">
           Choose Your Plan
@@ -97,8 +80,7 @@ export default function PlanSelection() {
         </p>
       </div>
 
-      {/* Plan Cards */}
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
         {plans.map((plan) => (
           <div
             key={plan.id}

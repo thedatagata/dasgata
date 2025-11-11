@@ -1,0 +1,219 @@
+# Amplitude Semantic Layer for MotherDuck
+# Defines business metrics for sessions_fct and users_fct
+
+sessions:
+  table: amplitude.sessions_fct
+  time_dimension: session_start_time
+  smallest_time_grain: TIME_GRAIN_SECOND
+  
+  dimensions:
+    # Identity
+    session_id: _.session_id
+    device_id: _.device_id
+    cookie_id: _.cookie_id
+    email: _.email
+    user_id: _.user_id
+    is_identified: _.is_identified
+    is_customer: _.is_customer
+    
+    # Time
+    session_start_time: _.session_start_time
+    session_end_time: _.session_end_time
+    session_date: _.session_date
+    
+    # Session Metrics
+    session_duration_seconds: _.session_duration_seconds
+    total_events: _.total_events
+    unique_event_types: _.unique_event_types
+    
+    # Funnel & Lifecycle
+    max_funnel_step: _.max_funnel_step
+    max_lifecycle_stage: _.max_lifecycle_stage
+    
+    # Lifecycle Stage Events
+    awareness_events: _.awareness_events
+    interest_events: _.interest_events
+    consideration_events: _.consideration_events
+    trial_events: _.trial_events
+    activation_events: _.activation_events
+    retention_events: _.retention_events
+    expansion_events: _.expansion_events
+    churn_risk_events: _.churn_risk_events
+    
+    # Revenue & Plan
+    session_revenue: _.session_revenue
+    plan_tier: _.plan_tier
+    
+    # Conversion Flags
+    has_conversion: _.has_conversion
+    reached_activation: _.reached_activation
+    is_conversion_session: _.is_conversion_session
+    
+    # Attribution
+    traffic_source: _.traffic_source
+    utm_source: _.utm_source
+    utm_medium: _.utm_medium
+    utm_campaign: _.utm_campaign
+    utm_content: _.utm_content
+    utm_term: _.utm_term
+  
+  measures:
+    # Core Session Metrics
+    session_count: _.count()
+    avg_session_duration: _.session_duration_seconds.mean()
+    total_session_duration: _.session_duration_seconds.sum()
+    median_session_duration: _.session_duration_seconds.quantile(0.5)
+    
+    # Event Metrics
+    total_events: _.total_events.sum()
+    avg_events_per_session: _.total_events.mean()
+    avg_unique_event_types: _.unique_event_types.mean()
+    
+    # Revenue Metrics
+    total_revenue: _.session_revenue.sum()
+    avg_revenue_per_session: _.session_revenue.mean()
+    revenue_per_event: _.session_revenue.sum() / _.total_events.sum()
+    
+    # Funnel Metrics
+    avg_funnel_depth: _.max_funnel_step.mean()
+    max_funnel_reached: _.max_funnel_step.max()
+    
+    # Lifecycle Engagement
+    total_awareness_events: _.awareness_events.sum()
+    total_interest_events: _.interest_events.sum()
+    total_consideration_events: _.consideration_events.sum()
+    total_trial_events: _.trial_events.sum()
+    total_activation_events: _.activation_events.sum()
+    total_retention_events: _.retention_events.sum()
+    total_expansion_events: _.expansion_events.sum()
+    total_churn_risk_events: _.churn_risk_events.sum()
+    
+    # Conversion Rates
+    conversion_rate: (_.has_conversion == True).mean()
+    activation_rate: (_.reached_activation == True).mean()
+    conversion_session_rate: (_.is_conversion_session == True).mean()
+    identified_user_rate: (_.is_identified == True).mean()
+    customer_session_rate: (_.is_customer == True).mean()
+    
+    # Quality Metrics
+    bounce_rate: (_.total_events == 1).mean()
+    engaged_session_rate: (_.session_duration_seconds > 30).mean()
+    high_value_session_rate: (_.session_revenue > 0).mean()
+
+users:
+  table: amplitude.users_fct
+  time_dimension: last_event_time
+  smallest_time_grain: TIME_GRAIN_SECOND
+  
+  dimensions:
+    # Identity
+    user_key: _.user_key
+    user_id: _.user_id
+    email: _.email
+    first_device_id: _.first_device_id
+    last_device_id: _.last_device_id
+    
+    # Time Dimensions
+    last_event_time: _.last_event_time
+    last_event_date: _.last_event_date
+    first_event_time: _.first_event_time
+    first_event_date: _.first_event_date
+    days_since_last_event: _.days_since_last_event
+    days_active_span: _.days_active_span
+    
+    # Lifetime Metrics
+    total_events: _.total_events
+    total_days_active: _.total_days_active
+    total_sessions: _.total_sessions
+    total_revenue: _.total_revenue
+    largest_transaction: _.largest_transaction
+    
+    # Recent Activity (24h)
+    events_24h: _.events_24h
+    sessions_24h: _.sessions_24h
+    
+    # Recent Activity (7d)
+    events_7d: _.events_7d
+    sessions_7d: _.sessions_7d
+    days_active_7d: _.days_active_7d
+    revenue_7d: _.revenue_7d
+    is_active_7d: _.is_active_7d
+    
+    # Recent Activity (30d)
+    events_30d: _.events_30d
+    sessions_30d: _.sessions_30d
+    days_active_30d: _.days_active_30d
+    revenue_30d: _.revenue_30d
+    is_active_30d: _.is_active_30d
+    
+    # Recent Activity (90d)
+    events_90d: _.events_90d
+    sessions_90d: _.sessions_90d
+    days_active_90d: _.days_active_90d
+    revenue_90d: _.revenue_90d
+    
+    # Lifecycle & Status
+    current_plan_tier: _.current_plan_tier
+    has_activated: _.has_activated
+    max_lifecycle_stage: _.max_lifecycle_stage
+    max_lifecycle_stage_name: _.max_lifecycle_stage_name
+    is_paying_customer: _.is_paying_customer
+    
+    # Attribution
+    first_touch_utm_source: _.first_touch_utm_source
+    first_touch_utm_medium: _.first_touch_utm_medium
+    first_touch_utm_campaign: _.first_touch_utm_campaign
+    last_touch_utm_source: _.last_touch_utm_source
+    last_touch_utm_medium: _.last_touch_utm_medium
+    last_touch_utm_campaign: _.last_touch_utm_campaign
+  
+  measures:
+    # Core User Metrics
+    user_count: _.count()
+    active_users_7d: (_.is_active_7d == True).sum()
+    active_users_30d: (_.is_active_30d == True).sum()
+    paying_customers: (_.is_paying_customer == True).sum()
+    activated_users: (_.has_activated == 1).sum()
+    
+    # Engagement Metrics
+    avg_events_per_user: _.total_events.mean()
+    avg_sessions_per_user: _.total_sessions.mean()
+    avg_days_active: _.total_days_active.mean()
+    avg_events_per_active_day: _.total_events.sum() / _.total_days_active.sum()
+    
+    # Recent Activity Averages
+    avg_events_24h: _.events_24h.mean()
+    avg_sessions_24h: _.sessions_24h.mean()
+    avg_events_7d: _.events_7d.mean()
+    avg_sessions_7d: _.sessions_7d.mean()
+    avg_days_active_7d: _.days_active_7d.mean()
+    avg_events_30d: _.events_30d.mean()
+    avg_sessions_30d: _.sessions_30d.mean()
+    avg_days_active_30d: _.days_active_30d.mean()
+    
+    # Revenue Metrics
+    total_ltv: _.total_revenue.sum()
+    avg_ltv: _.total_revenue.mean()
+    avg_revenue_7d: _.revenue_7d.mean()
+    avg_revenue_30d: _.revenue_30d.mean()
+    avg_revenue_90d: _.revenue_90d.mean()
+    avg_transaction_size: _.largest_transaction.mean()
+    
+    # Retention Metrics
+    retention_rate_7d: (_.is_active_7d == True).mean()
+    retention_rate_30d: (_.is_active_30d == True).mean()
+    activation_rate: (_.has_activated == 1).mean()
+    paying_customer_rate: (_.is_paying_customer == True).mean()
+    
+    # Engagement Cohorts
+    power_users: ((_.events_30d > 100) & (_.sessions_30d > 20)).sum()
+    casual_users: ((_.events_30d.between(10, 100)) & (_.sessions_30d.between(5, 20))).sum()
+    at_risk_users: ((_.days_since_last_event > 30) & (_.is_active_30d == False)).sum()
+    
+    # Customer Journey
+    avg_days_to_activation: _.days_active_span.mean()
+    median_days_to_activation: _.days_active_span.quantile(0.5)
+    
+    # Stickiness (DAU/MAU proxy)
+    stickiness_7d: _.days_active_7d.sum() / (_.is_active_7d == True).sum()
+    stickiness_30d: _.days_active_30d.sum() / (_.is_active_30d == True).sum()

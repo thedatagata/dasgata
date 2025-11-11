@@ -1,72 +1,104 @@
-// routes/app/index.tsx
+// routes/index.tsx
 import { Head } from "$fresh/runtime.ts";
+import Nav from "../../components/Nav.tsx";
+import Footer from "../../components/Footer.tsx";
 
-export default function AppPage() {
+export default function Home() {
   return (
     <>
       <Head>
-        <title>DATA_GATA | Your Data Platform</title>
-        <meta name="description" content="Your personal data platform" />
-        <meta http-equiv="refresh" content="3;url=/app/dashboard" />
+        <title>DATA_GATA | Choose Your Plan</title>
       </Head>
       
-      <div class="min-h-screen bg-gradient-to-br from-[#172217] to-[#186018] flex items-center justify-center">
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div class="mb-8">
-            <div class="w-32 h-32 mx-auto mb-6 bg-[#90C137]/20 rounded-full flex items-center justify-center">
-              <i class="fas fa-rocket text-[#90C137] text-6xl"></i>
-            </div>
-            
-            <h1 class="text-5xl md:text-6xl font-bold text-[#F8F6F0] mb-6">
-              Welcome to DATA_<span class="text-[#90C137]">GATA</span>!
+      <Nav />
+      <main class="min-h-screen bg-gradient-to-br from-[#172217] to-[#186018] py-32">
+        <div class="max-w-6xl mx-auto px-4">
+          <div class="text-center mb-16">
+            <h1 class="text-5xl font-bold text-[#F8F6F0] mb-4">
+              Choose Your Plan
             </h1>
-            
-            <p class="text-xl text-[#F8F6F0]/80 mb-8 max-w-2xl mx-auto">
-              Your personal data platform is being set up. We're connecting your data sources and preparing your analytics environment.
+            <p class="text-xl text-[#F8F6F0]/80">
+              Start with Base or unlock Premium features
             </p>
-            
-            <div class="bg-[#F8F6F0]/10 backdrop-blur-sm rounded-lg p-8 mb-8">
-              <h2 class="text-2xl font-bold text-[#90C137] mb-4">What's Next?</h2>
-              <ul class="text-left text-[#F8F6F0]/90 space-y-3 max-w-xl mx-auto">
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            {/* Base Plan */}
+            <div class="bg-[#F8F6F0] rounded-lg p-8 shadow-xl">
+              <h2 class="text-3xl font-bold text-[#172217] mb-4">Base</h2>
+              <div class="text-4xl font-bold text-[#90C137] mb-6">Free</div>
+              <ul class="space-y-3 mb-8 text-[#172217]">
                 <li class="flex items-start">
-                  <i class="fas fa-check text-[#90C137] mr-3 mt-1"></i>
-                  <span>Your data pipelines are being configured based on your selected sources</span>
+                  <svg class="w-6 h-6 text-[#90C137] mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                  Stream data from MotherDuck
                 </li>
                 <li class="flex items-start">
-                  <i class="fas fa-check text-[#90C137] mr-3 mt-1"></i>
-                  <span>Analytics models are being generated for your chosen metrics</span>
+                  <svg class="w-6 h-6 text-[#90C137] mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                  MotherDuck AI queries
                 </li>
                 <li class="flex items-start">
-                  <i class="fas fa-check text-[#90C137] mr-3 mt-1"></i>
-                  <span>Your lakehouse architecture is being deployed</span>
+                  <svg class="w-6 h-6 text-[#90C137] mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                  Basic visualizations
                 </li>
               </ul>
+              <a 
+                href="/dashboard?plan=base"
+                class="block w-full text-center py-3 bg-[#172217] text-[#F8F6F0] font-semibold rounded-md hover:bg-[#2a3a2a] transition-colors"
+              >
+                Start with Base
+              </a>
             </div>
-            
-            <div class="space-y-4">
-              <p class="text-[#F8F6F0]/70">
-                The full query interface (Phase 6-10) is coming soon!
-              </p>
-              
-              <div class="flex justify-center gap-4">
-                <a 
-                  href="/onboarding/department" 
-                  class="px-6 py-3 border border-[#90C137] text-[#90C137] rounded-md hover:bg-[#90C137]/10 transition-colors"
-                >
-                  ← Modify Setup
-                </a>
-                
-                <a 
-                  href="/" 
-                  class="px-6 py-3 bg-[#90C137] text-[#172217] rounded-md font-medium hover:bg-[#a0d147] transition-colors"
-                >
-                  Back to Home
-                </a>
+
+            {/* Premium Plan */}
+            <div class="bg-[#90C137] rounded-lg p-8 shadow-xl border-4 border-[#90C137] relative">
+              <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-[#172217] text-[#90C137] px-4 py-1 rounded-full text-sm font-bold">
+                RECOMMENDED
               </div>
+              <h2 class="text-3xl font-bold text-[#172217] mb-4">Premium</h2>
+              <div class="text-4xl font-bold text-[#172217] mb-6">$49/mo</div>
+              <ul class="space-y-3 mb-8 text-[#172217]">
+                <li class="flex items-start">
+                  <svg class="w-6 h-6 text-[#172217] mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                  Everything in Base
+                </li>
+                <li class="flex items-start">
+                  <svg class="w-6 h-6 text-[#172217] mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                  Materialize to DuckDB-WASM
+                </li>
+                <li class="flex items-start">
+                  <svg class="w-6 h-6 text-[#172217] mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                  WebLLM natural language queries
+                </li>
+                <li class="flex items-start">
+                  <svg class="w-6 h-6 text-[#172217] mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                  Advanced analytics
+                </li>
+              </ul>
+              <a 
+                href="/loading?plan=premium"
+                class="block w-full text-center py-3 bg-[#172217] text-[#90C137] font-semibold rounded-md hover:bg-[#0d110d] transition-colors"
+              >
+                Get Premium
+              </a>
             </div>
           </div>
         </div>
-      </div>
+      </main>
+      <Footer />
     </>
   );
 }

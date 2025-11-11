@@ -1,17 +1,13 @@
-// routes/app/loading.tsx
 import { Head } from "$fresh/runtime.ts";
-import PieLoading from "../../islands/PieLoading.tsx";
+import WebLLMLoader from "../../islands/WebLLMLoader.tsx";
 
-export default function LoadingPage() {
+export default function Loading() {
   return (
     <>
       <Head>
-        <title>Your Pie is Baking... | DATA_GATA</title>
+        <title>Loading Premium Features...</title>
       </Head>
-      
-      <div class="min-h-screen bg-gradient-to-br from-[#172217] to-[#186018]">
-        <PieLoading />
-      </div>
+      <WebLLMLoader />
     </>
   );
 }

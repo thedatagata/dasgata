@@ -3,7 +3,6 @@ import { createMotherDuckClient } from "../utils/motherduck-client.ts";
 import ObservablePlot from "./ObservablePlot.tsx";
 import * as Plot from "@observablehq/plot";
 
-// Simple similarity calculation
 function tokenize(text: string): string[] {
   return text.toLowerCase().replace(/[^\w\s]/g, ' ').split(/\s+/).filter(t => t.length > 0);
 }
@@ -33,6 +32,8 @@ function cosineSimilarity(bowA: Map<string, number>, bowB: Map<string, number>):
 
 interface SmartDashboardProps {
   motherDuckToken: string;
+  planTier: "base" | "premium";
+  sessionId: string;
 }
 
 interface TableOption {
@@ -42,36 +43,29 @@ interface TableOption {
   full_path: string;
 }
 
-type Step = 'select' | 'create_query' | 'audit_results' | 'visualize';
+type Step = 'select' | 'analyze' | 'validate' | 'visualize';
 
-export default function SmartDashboard({ motherDuckToken }: SmartDashboardProps) {
+export default function SmartDashboard({ motherDuckToken, planTier, sessionId }: SmartDashboardProps) {
   const [client, setClient] = useState<any>(null);
   const [step, setStep] = useState<Step>('select');
   const [error, setError] = useState<string | null>(null);
 
-  // Select step
   const [tables, setTables] = useState<TableOption[]>([]);
   const [selectedTable, setSelectedTable] = useState<string>("");
   const [tableSummary, setTableSummary] = useState<any[]>([]);
 
-  // Create Query step
-  const [queryMode, setQueryMode] = useState<'sql' | 'ai'>('ai');
-  const [sqlQuery, setSqlQuery] = useState("");
   const [aiPrompt, setAiPrompt] = useState("");
   const [generatedSQL, setGeneratedSQL] = useState("");
   const [sqlExplanation, setSqlExplanation] = useState("");
   const [similarityScore, setSimilarityScore] = useState<number | null>(null);
-  const [fixupSuggestions, setFixupSuggestions] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Audit Results step
   const [queryResults, setQueryResults] = useState<any[]>([]);
-  const [executedQuery, setExecutedQuery] = useState(""); // Store actual executed query
+  const [executedQuery, setExecutedQuery] = useState("");
   const [queryDescription, setQueryDescription] = useState("");
   const [approved, setApproved] = useState(false);
   const [materialize, setMaterialize] = useState(false);
 
-  // Visualize step
   const [vizType, setVizType] = useState<'line' | 'bar'>('line');
   const [timeField, setTimeField] = useState("");
   const [granularity, setGranularity] = useState<'day' | 'week' | 'month'>('day');
@@ -98,7 +92,6 @@ export default function SmartDashboard({ motherDuckToken }: SmartDashboardProps)
 
   async function loadTables(c: any) {
     try {
-      // Get materialized tables from memory.main
       const wasmResult = await c.evaluateQuery(`
         SELECT 
           table_name as name,
@@ -115,15 +108,13 @@ export default function SmartDashboard({ motherDuckToken }: SmartDashboardProps)
         full_path: row.full_path
       }));
 
-      // Get MotherDuck tables with descriptions - only sample_data.nyc and my_db.amplitude
       const mdResult = await c.evaluateQuery(`
         SELECT 
           database_name,
           schema_name,
           table_name
         FROM duckdb_tables()
-        WHERE (database_name = 'sample_data' AND schema_name = 'nyc')
-           OR (database_name = 'my_db' AND schema_name = 'amplitude')
+        WHERE (database_name = 'my_db' AND schema_name = 'amplitude' AND table_name IN ('users_fct', 'sessions_fct'))
         AND internal = false
       `);
       
@@ -141,7 +132,6 @@ export default function SmartDashboard({ motherDuckToken }: SmartDashboardProps)
             full_path: `${table.database_name}.${table.schema_name}.${table.table_name}`
           });
         } catch (err) {
-          console.warn(`Failed to get description for ${table.table_name}:`, err);
           mdTables.push({
             name: `${table.database_name}.${table.schema_name}.${table.table_name}`,
             description: 'Remote table in MotherDuck',
@@ -166,12 +156,9 @@ export default function SmartDashboard({ motherDuckToken }: SmartDashboardProps)
     setError(null);
     
     try {
-      // Get table summary - SUMMARIZE returns rows directly now
-      const summaryResult = await client.evaluateQuery(`
-        SUMMARIZE ${tablePath}
-      `);
+      const summaryResult = await client.evaluateQuery(`SUMMARIZE ${tablePath}`);
       setTableSummary(summaryResult.data.toRows());
-      setStep('create_query');
+      setStep('analyze');
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -186,61 +173,72 @@ export default function SmartDashboard({ motherDuckToken }: SmartDashboardProps)
     setError(null);
     
     try {
-      const parts = selectedTable.split('.');
-      const dbName = parts[0];
-      const schemaTable = parts.slice(1).join('.');
+      const selectedTableInfo = tables.find(t => t.full_path === selectedTable);
       
-      await client.evaluateQuery(`USE ${dbName};`);
-      
-      const escapedPrompt = aiPrompt.replace(/'/g, "''");
-      
-      // Generate SQL
-      const result = await client.evaluateQuery(
-        `CALL prompt_sql('${escapedPrompt}', include_tables=['${schemaTable}'])`
-      );
-      
-      const row = result.data.toRows()[0];
-      if (!row?.query) throw new Error('No SQL generated');
-      
-      const generatedQuery = row.query;
-      setGeneratedSQL(generatedQuery);
-      
-      // Get explanation for the generated SQL
-      const explainResult = await client.evaluateQuery(
-        `CALL prompt_explain('${generatedQuery.replace(/'/g, "''")}')`
-      );
-      const explainRow = explainResult.data.toRows()[0];
-      setSqlExplanation(explainRow?.explanation || 'Query generated successfully');
-      
-      // Calculate similarity between prompt and explanation (both natural language)
-      const promptTokens = tokenize(aiPrompt);
-      const explanationTokens = tokenize(explainRow?.explanation || '');
-      const promptBow = createBagOfWords(promptTokens);
-      const explanationBow = createBagOfWords(explanationTokens);
-      const similarity = cosineSimilarity(promptBow, explanationBow);
-      setSimilarityScore(similarity);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function requestFixup() {
-    if (!client || !sqlQuery.trim()) return;
-    
-    setLoading(true);
-    setError(null);
-    
-    try {
-      // Properly escape SQL - double single quotes, that's it
-      const escapedQuery = sqlQuery.replace(/'/g, "''");
-      
-      const result = await client.evaluateQuery(
-        `CALL prompt_fixup('${escapedQuery}')`
-      );
-      const row = result.data.toRows()[0];
-      setFixupSuggestions(row.fixed_sql || 'No changes suggested - query looks good!');
+      if (selectedTableInfo?.source === 'materialized' && planTier === 'premium') {
+        if (!(window as any).webllmEngine) {
+          alert('WebLLM needs to be initialized. Redirecting...');
+          window.location.href = '/app/loading';
+          return;
+        }
+        
+        const schemaResult = await client.evaluateQuery(`DESCRIBE ${selectedTable}`);
+        const schema = schemaResult.data.toRows();
+        
+        const completion = await (window as any).webllmEngine.chat.completions.create({
+          messages: [
+            {
+              role: "system",
+              content: `You are a SQL expert. Generate DuckDB SQL queries.
+Table: ${selectedTable}
+Schema: ${JSON.stringify(schema)}`
+            },
+            {
+              role: "user", 
+              content: `Generate SQL for: ${aiPrompt}`
+            }
+          ]
+        });
+        
+        const response = completion.choices[0].message.content;
+        const sqlMatch = response.match(/```sql\n([\s\S]*?)\n```/);
+        const sql = sqlMatch ? sqlMatch[1] : response;
+        
+        setGeneratedSQL(sql);
+        setSqlExplanation("Generated with WebLLM");
+        setSimilarityScore(1.0);
+        
+      } else {
+        const parts = selectedTable.split('.');
+        const dbName = parts[0];
+        const schemaTable = parts.slice(1).join('.');
+        
+        await client.evaluateQuery(`USE ${dbName};`);
+        
+        const escapedPrompt = aiPrompt.replace(/'/g, "''");
+        const result = await client.evaluateQuery(
+          `CALL prompt_sql('${escapedPrompt}', include_tables=['${schemaTable}'])`
+        );
+        
+        const row = result.data.toRows()[0];
+        if (!row?.query) throw new Error('No SQL generated');
+        
+        setGeneratedSQL(row.query);
+        
+        const explainResult = await client.evaluateQuery(
+          `CALL prompt_explain('${row.query.replace(/'/g, "''")}')`
+        );
+        const explainRow = explainResult.data.toRows()[0];
+        setSqlExplanation(explainRow?.explanation || 'Query generated');
+        
+        const promptTokens = tokenize(aiPrompt);
+        const explanationTokens = tokenize(explainRow?.explanation || '');
+        const similarity = cosineSimilarity(
+          createBagOfWords(promptTokens),
+          createBagOfWords(explanationTokens)
+        );
+        setSimilarityScore(similarity);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -249,36 +247,27 @@ export default function SmartDashboard({ motherDuckToken }: SmartDashboardProps)
   }
 
   async function executeQuery() {
-    if (!client) return;
-    
-    const queryToExecute = queryMode === 'ai' ? generatedSQL : sqlQuery;
-    if (!queryToExecute.trim()) return;
+    if (!client || !generatedSQL.trim()) return;
     
     setLoading(true);
     setError(null);
     
     try {
-      // Execute query
-      const result = await client.evaluateQuery(queryToExecute);
+      const result = await client.evaluateQuery(generatedSQL);
       setQueryResults(result.data.toRows());
+      setExecutedQuery(generatedSQL);
       
-      // Store the executed query for display in audit results
-      setExecutedQuery(queryToExecute);
-      
-      // Get explanation - properly escape the SQL
       try {
-        const escapedQuery = queryToExecute.replace(/'/g, "''");
-        
+        const escapedQuery = generatedSQL.replace(/'/g, "''");
         const explainResult = await client.evaluateQuery(
           `CALL prompt_explain('${escapedQuery}')`
         );
         setQueryDescription(explainResult.data.toRows()[0]?.explanation || 'Query executed successfully');
       } catch (explainErr) {
-        console.warn('Could not get explanation:', explainErr);
         setQueryDescription('Query executed successfully');
       }
       
-      setStep('audit_results');
+      setStep('validate');
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -289,26 +278,17 @@ export default function SmartDashboard({ motherDuckToken }: SmartDashboardProps)
   async function handleApprove() {
     if (!approved) return;
     
-    if (materialize && client) {
+    if (materialize && planTier === 'premium' && client) {
       try {
-        // Prompt for table name
         const userTableName = prompt('Enter a name for the materialized table:', 'my_analysis');
         if (!userTableName || !userTableName.trim()) {
-          alert('❌ Materialization cancelled - no table name provided');
+          alert('❌ Materialization cancelled');
           return;
         }
         
-        // Sanitize table name (alphanumeric and underscores only)
         const tableName = userTableName.trim().replace(/[^a-zA-Z0-9_]/g, '_');
-        
-        await client.evaluateQuery(`
-          CREATE TABLE memory.main.${tableName} AS 
-          ${executedQuery}
-        `);
-        
-        // Reload tables to include the new materialized table
+        await client.evaluateQuery(`CREATE TABLE memory.main.${tableName} AS ${executedQuery}`);
         await loadTables(client);
-        
         alert(`✅ Results materialized as: memory.main.${tableName}`);
       } catch (err) {
         setError(err instanceof Error ? err.message : String(err));
@@ -331,10 +311,9 @@ export default function SmartDashboard({ motherDuckToken }: SmartDashboardProps)
     <div class="min-h-screen bg-gradient-to-br from-[#172217] to-[#186018] p-8">
       <div class="max-w-7xl mx-auto space-y-6">
         
-        {/* Progress Indicator */}
         <div class="bg-[#172217]/60 backdrop-blur-sm rounded-lg shadow-xl border border-[#90C137]/20 p-4">
           <div class="flex items-center justify-between">
-            {['select', 'create_query', 'audit_results', 'visualize'].map((s, idx) => (
+            {['select', 'analyze', 'validate', 'visualize'].map((s, idx) => (
               <div key={s} class="flex items-center flex-1">
                 <div class={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
                   step === s ? 'bg-[#90C137] text-[#172217]' : 'bg-[#172217] border border-[#90C137]/30 text-[#F8F6F0]/50'
@@ -343,8 +322,8 @@ export default function SmartDashboard({ motherDuckToken }: SmartDashboardProps)
                 </div>
                 <span class={`ml-2 text-sm ${step === s ? 'text-[#90C137]' : 'text-[#F8F6F0]/50'}`}>
                   {s === 'select' && 'Select'}
-                  {s === 'create_query' && 'Create Query'}
-                  {s === 'audit_results' && 'Audit Results'}
+                  {s === 'analyze' && 'Analyze'}
+                  {s === 'validate' && 'Validate'}
                   {s === 'visualize' && 'Visualize'}
                 </span>
                 {idx < 3 && <div class="flex-1 h-0.5 bg-[#90C137]/20 mx-4" />}
@@ -359,7 +338,6 @@ export default function SmartDashboard({ motherDuckToken }: SmartDashboardProps)
           </div>
         )}
 
-        {/* SELECT STEP */}
         {step === 'select' && (
           <div class="bg-[#172217]/60 backdrop-blur-sm rounded-lg shadow-xl border border-[#90C137]/20 p-6">
             <div class="flex items-center justify-between mb-6">
@@ -369,7 +347,7 @@ export default function SmartDashboard({ motherDuckToken }: SmartDashboardProps)
                 disabled={loading}
                 class="px-4 py-2 bg-[#90C137] text-[#172217] rounded-lg hover:bg-[#a0d147] disabled:opacity-50 text-sm font-medium"
               >
-                🔄 Refresh Tables
+                🔄 Refresh
               </button>
             </div>
             
@@ -388,7 +366,7 @@ export default function SmartDashboard({ motherDuckToken }: SmartDashboardProps)
                     {table.description}
                   </div>
                   <div class="col-span-2 text-right text-xs text-[#F8F6F0]/50">
-                    {table.source === 'materialized' ? '💾 Materialized' : '☁️ MotherDuck'}
+                    {table.source === 'materialized' ? '💾 WASM' : '☁️ MD'}
                   </div>
                 </button>
               ))}
@@ -396,10 +374,8 @@ export default function SmartDashboard({ motherDuckToken }: SmartDashboardProps)
           </div>
         )}
 
-        {/* CREATE QUERY STEP */}
-        {step === 'create_query' && (
+        {step === 'analyze' && (
           <div class="space-y-6">
-            {/* Table Summary */}
             <div class="bg-[#172217]/60 backdrop-blur-sm rounded-lg shadow-xl border border-[#90C137]/20 p-6">
               <h2 class="text-xl font-bold text-[#F8F6F0] mb-4">Table Summary: {selectedTable}</h2>
               
@@ -412,7 +388,6 @@ export default function SmartDashboard({ motherDuckToken }: SmartDashboardProps)
                       <th class="px-4 py-2 text-right text-[#90C137] border-b border-[#90C137]/20">Min</th>
                       <th class="px-4 py-2 text-right text-[#90C137] border-b border-[#90C137]/20">Max</th>
                       <th class="px-4 py-2 text-right text-[#90C137] border-b border-[#90C137]/20">Null %</th>
-                      <th class="px-4 py-2 text-right text-[#90C137] border-b border-[#90C137]/20">Unique</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -429,9 +404,6 @@ export default function SmartDashboard({ motherDuckToken }: SmartDashboardProps)
                         <td class="px-4 py-2 text-right text-[#F8F6F0]/70 border-b border-[#90C137]/10">
                           {row.null_percentage !== null ? parseFloat(row.null_percentage).toFixed(1) + '%' : '-'}
                         </td>
-                        <td class="px-4 py-2 text-right text-[#F8F6F0]/70 border-b border-[#90C137]/10">
-                          {row.approx_unique !== null ? parseInt(row.approx_unique).toLocaleString() : '-'}
-                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -439,120 +411,53 @@ export default function SmartDashboard({ motherDuckToken }: SmartDashboardProps)
               </div>
             </div>
 
-            {/* Query Builder */}
             <div class="bg-[#172217]/60 backdrop-blur-sm rounded-lg shadow-xl border border-[#90C137]/20 p-6">
-              <div class="flex space-x-4 mb-6">
-                <button
-                  onClick={() => setQueryMode('ai')}
-                  class={`flex-1 py-3 rounded-lg font-medium transition-colors ${
-                    queryMode === 'ai' 
-                      ? 'bg-[#90C137] text-[#172217]' 
-                      : 'bg-[#172217]/40 border border-[#90C137]/30 text-[#F8F6F0]'
-                  }`}
-                >
-                  🤖 Use AI
-                </button>
-                <button
-                  onClick={() => setQueryMode('sql')}
-                  class={`flex-1 py-3 rounded-lg font-medium transition-colors ${
-                    queryMode === 'sql' 
-                      ? 'bg-[#90C137] text-[#172217]' 
-                      : 'bg-[#172217]/40 border border-[#90C137]/30 text-[#F8F6F0]'
-                  }`}
-                >
-                  ✍️ Write SQL
-                </button>
-              </div>
-
-              {queryMode === 'ai' ? (
-                <div class="space-y-4">
-                  <div>
-                    <label class="block text-sm font-medium mb-2 text-[#F8F6F0]">Describe what you want to query</label>
-                    <textarea
-                      value={aiPrompt}
-                      onInput={(e) => setAiPrompt((e.target as HTMLTextAreaElement).value)}
-                      rows={3}
-                      placeholder="e.g., Show me total revenue by month for 2024"
-                      class="w-full px-4 py-3 bg-[#172217]/60 border border-[#90C137]/30 text-[#90C137] rounded-lg focus:border-[#90C137] focus:outline-none placeholder-[#F8F6F0]/40"
-                    />
-                  </div>
-                  <button
-                    onClick={generateAIQuery}
-                    disabled={loading || !aiPrompt.trim()}
-                    class="w-full py-3 bg-[#90C137] text-[#172217] rounded-lg hover:bg-[#a0d147] disabled:opacity-50 font-medium"
-                  >
-                    {loading ? 'Generating...' : 'Generate SQL'}
-                  </button>
-
-                  {generatedSQL && (
-                    <div class="space-y-3 mt-4">
-                      <div>
-                        <label class="block text-sm font-medium mb-2 text-[#F8F6F0]">Generated SQL</label>
-                        <pre class="p-4 bg-[#172217]/60 border border-[#90C137]/30 rounded-lg text-[#90C137] text-sm overflow-x-auto">
-                          {generatedSQL}
-                        </pre>
-                      </div>
-                      {sqlExplanation && (
-                        <div class="p-3 bg-[#90C137]/10 border border-[#90C137]/30 rounded text-sm text-[#F8F6F0]/90">
-                          <strong>Explanation:</strong> {sqlExplanation}
-                        </div>
-                      )}
-                      {similarityScore !== null && (
-                        <div class="text-sm text-[#F8F6F0]/70">
-                          Similarity Score: <strong class="text-[#90C137]">{(similarityScore * 100).toFixed(1)}%</strong>
-                        </div>
-                      )}
-                    </div>
-                  )}
+              <h2 class="text-xl font-bold text-[#F8F6F0] mb-4">Query with AI</h2>
+              
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium mb-2 text-[#F8F6F0]">Describe what you want to query</label>
+                  <textarea
+                    value={aiPrompt}
+                    onInput={(e) => setAiPrompt((e.target as HTMLTextAreaElement).value)}
+                    rows={3}
+                    placeholder="e.g., Show me total revenue by month for 2024"
+                    class="w-full px-4 py-3 bg-[#172217]/60 border border-[#90C137]/30 text-[#90C137] rounded-lg focus:border-[#90C137] focus:outline-none placeholder-[#F8F6F0]/40"
+                  />
                 </div>
-              ) : (
-                <div class="space-y-4">
-                  <div>
-                    <label class="block text-sm font-medium mb-2 text-[#F8F6F0]">Write your SQL query</label>
-                    <textarea
-                      value={sqlQuery}
-                      onInput={(e) => setSqlQuery((e.target as HTMLTextAreaElement).value)}
-                      rows={8}
-                      placeholder="SELECT * FROM ..."
-                      class="w-full px-4 py-3 bg-[#172217]/60 border border-[#90C137]/30 text-[#90C137] font-mono text-sm rounded-lg focus:border-[#90C137] focus:outline-none"
-                    />
-                  </div>
-                  <button
-                    onClick={requestFixup}
-                    disabled={loading || !sqlQuery.trim()}
-                    class="w-full py-2 bg-[#172217]/40 border border-[#90C137]/30 text-[#F8F6F0] rounded-lg hover:bg-[#90C137]/10 disabled:opacity-50"
-                  >
-                    {loading ? 'Checking...' : '🔧 Get MotherDuck Suggestions (PROMPT_FIXUP)'}
-                  </button>
+                <button
+                  onClick={generateAIQuery}
+                  disabled={loading || !aiPrompt.trim()}
+                  class="w-full py-3 bg-[#90C137] text-[#172217] rounded-lg hover:bg-[#a0d147] disabled:opacity-50 font-medium"
+                >
+                  {loading ? 'Generating...' : 'Generate SQL'}
+                </button>
 
-                  {fixupSuggestions && (
+                {generatedSQL && (
+                  <div class="space-y-3 mt-4">
                     <div>
-                      <label class="block text-sm font-medium mb-2 text-[#F8F6F0]">MotherDuck Suggestions</label>
-                      <pre class="p-4 bg-[#90C137]/10 border border-[#90C137]/30 rounded-lg text-[#90C137] text-sm overflow-x-auto">
-                        {fixupSuggestions}
+                      <label class="block text-sm font-medium mb-2 text-[#F8F6F0]">Generated SQL</label>
+                      <pre class="p-4 bg-[#172217]/60 border border-[#90C137]/30 rounded-lg text-[#90C137] text-sm overflow-x-auto">
+                        {generatedSQL}
                       </pre>
-                      <div class="mt-2 flex space-x-3">
-                        <button
-                          onClick={() => setSqlQuery(fixupSuggestions)}
-                          class="flex-1 py-2 bg-[#90C137] text-[#172217] rounded hover:bg-[#a0d147] text-sm font-medium"
-                        >
-                          Accept Changes
-                        </button>
-                        <button
-                          onClick={() => setFixupSuggestions("")}
-                          class="flex-1 py-2 bg-[#172217]/40 border border-[#90C137]/30 text-[#F8F6F0] rounded hover:bg-[#90C137]/10 text-sm"
-                        >
-                          Dismiss
-                        </button>
-                      </div>
                     </div>
-                  )}
-                </div>
-              )}
+                    {sqlExplanation && (
+                      <div class="p-3 bg-[#90C137]/10 border border-[#90C137]/30 rounded text-sm text-[#F8F6F0]/90">
+                        <strong>Explanation:</strong> {sqlExplanation}
+                      </div>
+                    )}
+                    {similarityScore !== null && (
+                      <div class="text-sm text-[#F8F6F0]/70">
+                        Similarity: <strong class="text-[#90C137]">{(similarityScore * 100).toFixed(1)}%</strong>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
 
               <button
                 onClick={executeQuery}
-                disabled={loading || (queryMode === 'ai' ? !generatedSQL : !sqlQuery.trim())}
+                disabled={loading || !generatedSQL}
                 class="w-full mt-6 py-3 bg-[#90C137] text-[#172217] rounded-lg hover:bg-[#a0d147] disabled:opacity-50 font-medium"
               >
                 {loading ? 'Executing...' : 'Execute Query →'}
@@ -562,16 +467,15 @@ export default function SmartDashboard({ motherDuckToken }: SmartDashboardProps)
                 onClick={() => setStep('select')}
                 class="w-full mt-3 py-2 bg-[#172217]/40 border border-[#90C137]/30 text-[#F8F6F0] rounded-lg hover:bg-[#90C137]/10 text-sm"
               >
-                ← Back to Table Selection
+                ← Back
               </button>
             </div>
           </div>
         )}
 
-        {/* AUDIT RESULTS STEP */}
-        {step === 'audit_results' && queryResults.length > 0 && (
+        {step === 'validate' && queryResults.length > 0 && (
           <div class="bg-[#172217]/60 backdrop-blur-sm rounded-lg shadow-xl border border-[#90C137]/20 p-6">
-            <h2 class="text-2xl font-bold text-[#F8F6F0] mb-4">Audit Results</h2>
+            <h2 class="text-2xl font-bold text-[#F8F6F0] mb-4">Validate Results</h2>
 
             {executedQuery && (
               <div class="mb-4 p-4 bg-[#172217]/80 border border-[#90C137]/30 rounded-lg">
@@ -582,7 +486,7 @@ export default function SmartDashboard({ motherDuckToken }: SmartDashboardProps)
 
             {queryDescription && (
               <div class="mb-6 p-4 bg-[#90C137]/10 border border-[#90C137]/30 rounded-lg text-[#F8F6F0]/90">
-                <strong>Query Explanation (PROMPT_EXPLAIN):</strong><br/>
+                <strong>Query Explanation:</strong><br/>
                 {queryDescription}
               </div>
             )}
@@ -628,7 +532,7 @@ export default function SmartDashboard({ motherDuckToken }: SmartDashboardProps)
                 <span class="text-[#F8F6F0]">✓ Approve these results</span>
               </label>
 
-              {approved && (
+              {planTier === 'premium' && approved && (
                 <label class="flex items-center space-x-3 p-3 bg-[#172217]/40 border border-[#90C137]/30 rounded-lg cursor-pointer hover:bg-[#90C137]/5">
                   <input
                     type="checkbox"
@@ -642,10 +546,10 @@ export default function SmartDashboard({ motherDuckToken }: SmartDashboardProps)
 
               <div class="flex space-x-3">
                 <button
-                  onClick={() => setStep('create_query')}
+                  onClick={() => setStep('analyze')}
                   class="flex-1 py-3 bg-[#172217]/40 border border-[#90C137]/30 text-[#F8F6F0] rounded-lg hover:bg-[#90C137]/10"
                 >
-                  ← Back to Query
+                  ← Back
                 </button>
                 <button
                   onClick={handleApprove}
@@ -659,7 +563,6 @@ export default function SmartDashboard({ motherDuckToken }: SmartDashboardProps)
           </div>
         )}
 
-        {/* VISUALIZE STEP */}
         {step === 'visualize' && queryResults.length > 0 && (
           <div class="bg-[#172217]/60 backdrop-blur-sm rounded-lg shadow-xl border border-[#90C137]/20 p-6">
             <h2 class="text-2xl font-bold text-[#F8F6F0] mb-6">Visualize Results</h2>
@@ -692,26 +595,13 @@ export default function SmartDashboard({ motherDuckToken }: SmartDashboardProps)
               </div>
 
               <div>
-                <label class="block text-sm font-medium mb-2 text-[#F8F6F0]">Granularity</label>
-                <select
-                  value={granularity}
-                  onChange={(e) => setGranularity(e.target.value as any)}
-                  class="w-full px-3 py-2 bg-[#172217]/60 border border-[#90C137]/30 text-[#90C137] rounded-lg"
-                >
-                  <option value="day">Day</option>
-                  <option value="week">Week</option>
-                  <option value="month">Month</option>
-                </select>
-              </div>
-
-              <div>
-                <label class="block text-sm font-medium mb-2 text-[#F8F6F0]">Dimension Field</label>
+                <label class="block text-sm font-medium mb-2 text-[#F8F6F0]">Dimension (Optional)</label>
                 <select
                   value={dimensionField}
                   onChange={(e) => setDimensionField(e.target.value)}
                   class="w-full px-3 py-2 bg-[#172217]/60 border border-[#90C137]/30 text-[#90C137] rounded-lg"
                 >
-                  <option value="">-- Select --</option>
+                  <option value="">-- None --</option>
                   {availableColumns.map(col => (
                     <option key={col} value={col}>{col}</option>
                   ))}
@@ -739,134 +629,123 @@ export default function SmartDashboard({ motherDuckToken }: SmartDashboardProps)
                   onChange={(e) => setMetric2(e.target.value)}
                   class="w-full px-3 py-2 bg-[#172217]/60 border border-[#90C137]/30 text-[#90C137] rounded-lg"
                 >
-                  <option value="">-- Select --</option>
+                  <option value="">-- None --</option>
                   {numericColumns.map(col => (
                     <option key={col} value={col}>{col}</option>
                   ))}
                 </select>
               </div>
 
-              <div class="col-span-2">
-                <label class="block text-sm font-medium mb-2 text-[#F8F6F0]">Filter</label>
-                <div class="grid grid-cols-3 gap-2">
-                  <select
-                    value={filterField}
-                    onChange={(e) => setFilterField(e.target.value)}
-                    class="px-3 py-2 bg-[#172217]/60 border border-[#90C137]/30 text-[#90C137] rounded-lg"
-                  >
-                    <option value="">-- Dimension --</option>
-                    {availableColumns.map(col => (
-                      <option key={col} value={col}>{col}</option>
-                    ))}
-                  </select>
-                  <select
-                    class="px-3 py-2 bg-[#172217]/60 border border-[#90C137]/30 text-[#90C137] rounded-lg"
-                  >
-                    <option value="=">=</option>
-                    <option value="!=">!=</option>
-                    <option value=">">{">"}</option>
-                    <option value="<">{"<"}</option>
-                    <option value=">=">{">="}</option>
-                    <option value="<=">{"<="}</option>
-                    <option value="LIKE">LIKE</option>
-                    <option value="IS NULL">IS NULL</option>
-                    <option value="IS NOT NULL">IS NOT NULL</option>
-                  </select>
+              <div>
+                <label class="block text-sm font-medium mb-2 text-[#F8F6F0]">Filter Field (Optional)</label>
+                <select
+                  value={filterField}
+                  onChange={(e) => setFilterField(e.target.value)}
+                  class="w-full px-3 py-2 bg-[#172217]/60 border border-[#90C137]/30 text-[#90C137] rounded-lg"
+                >
+                  <option value="">-- None --</option>
+                  {availableColumns.map(col => (
+                    <option key={col} value={col}>{col}</option>
+                  ))}
+                </select>
+              </div>
+
+              {filterField && (
+                <div class="col-span-2">
+                  <label class="block text-sm font-medium mb-2 text-[#F8F6F0]">Filter Value</label>
                   <input
                     type="text"
                     value={filterValue}
                     onInput={(e) => setFilterValue((e.target as HTMLInputElement).value)}
-                    placeholder="Value"
-                    class="px-3 py-2 bg-[#172217]/60 border border-[#90C137]/30 text-[#90C137] rounded-lg placeholder-[#F8F6F0]/40"
+                    placeholder="Enter value..."
+                    class="w-full px-3 py-2 bg-[#172217]/60 border border-[#90C137]/30 text-[#90C137] rounded-lg placeholder-[#F8F6F0]/40"
                   />
                 </div>
-              </div>
+              )}
             </div>
 
             <button
               onClick={() => setShowViz(true)}
-              class="w-full py-3 mb-6 bg-[#90C137] text-[#172217] rounded-lg hover:bg-[#a0d147] font-medium"
+              disabled={!timeField || !metric1}
+              class="w-full py-3 mb-6 bg-[#90C137] text-[#172217] rounded-lg hover:bg-[#a0d147] disabled:opacity-50 font-medium"
             >
               Generate Visualization
             </button>
 
-            {showViz && ((vizType === 'line' && timeField && metric1) || (vizType === 'bar' && (timeField || dimensionField) && metric1)) && (
+            {showViz && timeField && metric1 && (
               <div class="bg-white rounded-lg p-4 mb-6">
-                <ObservablePlot
-                  data={queryResults.map(row => ({
-                    ...row,
-                    ...(timeField && vizType === 'line' ? { [timeField]: new Date(row[timeField]) } : {}),
-                    ...(dimensionField && vizType === 'bar' && row[dimensionField] && String(row[dimensionField]).match(/^\d{4}-\d{2}/) ? 
-                      { [dimensionField]: String(row[dimensionField]) } : {}),
-                    [metric1]: Number(row[metric1]),
-                    ...(metric2 ? { [metric2]: Number(row[metric2]) } : {})
-                  }))}
-                  spec={{
-                    marks: vizType === 'line' ? [
-                      Plot.line(queryResults.map(row => ({
-                        ...row,
-                        [timeField]: new Date(row[timeField]),
-                        [metric1]: Number(row[metric1])
-                      })), {
-                        x: timeField,
-                        y: metric1,
-                        ...(dimensionField ? { stroke: dimensionField } : { stroke: '#90C137' }),
-                        strokeWidth: 2
-                      }),
-                      Plot.dot(queryResults.map(row => ({
-                        ...row,
-                        [timeField]: new Date(row[timeField]),
-                        [metric1]: Number(row[metric1])
-                      })), {
-                        x: timeField,
-                        y: metric1,
-                        ...(dimensionField ? { fill: dimensionField } : { fill: '#90C137' }),
-                        r: 3
-                      })
-                    ] : [
-                      Plot.barY(queryResults.map(row => ({
-                        ...row,
-                        ...(timeField && row[timeField] && String(row[timeField]).match(/^\d{4}-\d{2}/) ? 
-                          { [timeField]: String(row[timeField]) } : {}),
-                        [metric1]: Number(row[metric1])
-                      })), {
-                        x: timeField || dimensionField,
-                        y: metric1,
-                        ...(dimensionField && timeField ? { fill: dimensionField } : { fill: '#90C137' })
-                      })
-                    ],
-                    color: dimensionField && vizType === 'line' ? { legend: true } : undefined,
-                    x: { 
-                      label: dimensionField || timeField,
-                      ...(vizType === 'line' ? { type: 'utc' } : {})
-                    },
-                    y: { label: metric1 },
-                    width: 800,
-                    height: 400,
-                    marginLeft: 60,
-                    marginBottom: 80
-                  }}
-                  title={`${metric1} ${vizType === 'line' ? 'over' : 'by'} ${dimensionField || timeField}`}
-                />
+                {(() => {
+                  let plotData = queryResults.filter(row => 
+                    !filterField || !filterValue || String(row[filterField]) === filterValue
+                  );
+                  
+                  if (plotData.length > 10000) {
+                    plotData = plotData.slice(0, 10000);
+                  }
+                  
+                  const uniqueXValues = new Set(plotData.map(row => row[timeField])).size;
+                  
+                  if (uniqueXValues > 1000) {
+                    return (
+                      <div class="p-8 text-center text-gray-600">
+                        <div class="text-4xl mb-4">📊</div>
+                        <p class="text-lg font-semibold">Too many data points to visualize</p>
+                        <p class="text-sm mt-2">
+                          Your query returned {uniqueXValues.toLocaleString()} unique values for {timeField}.
+                          Try aggregating your data (GROUP BY) to reduce the number of points.
+                        </p>
+                      </div>
+                    );
+                  }
+                  
+                  return (
+                    <ObservablePlot
+                      data={plotData}
+                      spec={{
+                        marks: vizType === 'line' ? [
+                          Plot.line(plotData, {
+                            x: timeField,
+                            y: metric1,
+                            stroke: dimensionField || '#90C137',
+                            strokeWidth: 2
+                          }),
+                          ...(metric2 ? [Plot.line(plotData, {
+                            x: timeField,
+                            y: metric2,
+                            stroke: '#ff6b6b',
+                            strokeWidth: 2,
+                            strokeDasharray: '4'
+                          })] : [])
+                        ] : [
+                          Plot.barY(plotData, {
+                            x: timeField,
+                            y: metric1,
+                            fill: dimensionField || '#90C137'
+                          }),
+                          ...(metric2 ? [Plot.barY(plotData, {
+                            x: timeField,
+                            y: metric2,
+                            fill: '#ff6b6b',
+                            opacity: 0.7
+                          })] : [])
+                        ],
+                        color: dimensionField ? { legend: true } : undefined,
+                        width: 800,
+                        height: 400
+                      }}
+                      title={`${metric1}${metric2 ? ` & ${metric2}` : ''} by ${timeField}`}
+                    />
+                  );
+                })()}
               </div>
             )}
 
-            {showViz && ((vizType === 'line' && (!timeField || !metric1)) || (vizType === 'bar' && (!timeField && !dimensionField || !metric1))) && (
-              <div class="p-12 bg-white rounded-lg text-center text-gray-600 mb-6">
-                <div class="text-6xl mb-4">⚠️</div>
-                <p class="text-lg font-semibold">Missing Required Fields</p>
-                <p class="text-sm mt-2 text-gray-500">
-                  Please select both Time Field and Metric 1 to generate visualization
-                </p>
-              </div>
-            )}
-
-            <div class="flex space-x-3 mt-6">
+            <div class="flex gap-3">
               <button
-                onClick={() => setStep('create_query')}
+                onClick={() => setStep('validate')}
                 class="flex-1 py-3 bg-[#172217]/40 border border-[#90C137]/30 text-[#F8F6F0] rounded-lg hover:bg-[#90C137]/10"
               >
-                ← Back to Create Query
+                ← Back
               </button>
               <button
                 onClick={() => setStep('select')}

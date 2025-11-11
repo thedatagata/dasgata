@@ -2,17 +2,15 @@
 import { Head } from "$fresh/runtime.ts";
 import PlanSelection from "../../islands/onboarding/PlanSelection.tsx";
 
-export default function PlansPage() {
+export default function Home() {
   return (
     <>
       <Head>
-        <title>Choose Your Plan | DATA_GATA</title>
-        <meta name="description" content="Select the plan that fits your needs" />
+        <title>DATA_GATA | Choose Your Plan</title>
       </Head>
-      
-      <div class="min-h-screen bg-gradient-to-br from-[#172217] to-[#186018]">
+      <main class="min-h-screen bg-gradient-to-br from-[#172217] to-[#186018] py-32">
         <PlanSelection />
-      </div>
+      </main>
     </>
   );
 }

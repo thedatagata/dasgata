@@ -5,14 +5,10 @@
 import * as $_404 from "./routes/_404.tsx";
 import * as $_app from "./routes/_app.tsx";
 import * as $_middleware from "./routes/_middleware.ts";
-import * as $admin_middleware from "./routes/admin/_middleware.ts";
-import * as $admin_oauth_callback from "./routes/admin/oauth/callback.ts";
-import * as $admin_oauth_signin from "./routes/admin/oauth/signin.ts";
-import * as $admin_oauth_signout from "./routes/admin/oauth/signout.ts";
-import * as $admin_users from "./routes/admin/users.tsx";
 import * as $api_analytics_approve from "./routes/api/analytics/approve.ts";
 import * as $api_analytics_profile from "./routes/api/analytics/profile.ts";
 import * as $api_analytics_query from "./routes/api/analytics/query.ts";
+import * as $api_ld_config from "./routes/api/ld-config.ts";
 import * as $api_metadata_get_table from "./routes/api/metadata/get-table.ts";
 import * as $api_metadata_get_tables from "./routes/api/metadata/get-tables.ts";
 import * as $api_metadata_register_table from "./routes/api/metadata/register-table.ts";
@@ -24,25 +20,19 @@ import * as $api_query_approve from "./routes/api/query/approve.ts";
 import * as $api_query_cache from "./routes/api/query/cache.ts";
 import * as $api_query_find_similar from "./routes/api/query/find-similar.ts";
 import * as $api_track from "./routes/api/track.ts";
-import * as $app_middleware from "./routes/app/_middleware.ts";
 import * as $app_dashboard from "./routes/app/dashboard.tsx";
 import * as $app_index from "./routes/app/index.tsx";
 import * as $app_loading from "./routes/app/loading.tsx";
-import * as $auth_callback from "./routes/auth/callback.ts";
-import * as $auth_signin from "./routes/auth/signin.ts";
-import * as $auth_signout from "./routes/auth/signout.ts";
 import * as $health from "./routes/health.ts";
 import * as $index from "./routes/index.tsx";
-import * as $onboarding_middleware from "./routes/onboarding/_middleware.ts";
 import * as $onboarding_plans from "./routes/onboarding/plans.tsx";
 import * as $DataCatalog from "./islands/DataCatalog.tsx";
 import * as $ObservablePlot from "./islands/ObservablePlot.tsx";
-import * as $PieLoading from "./islands/PieLoading.tsx";
-import * as $PlanSelection from "./islands/PlanSelection.tsx";
 import * as $QueryHistory from "./islands/QueryHistory.tsx";
 import * as $ScrollToTop from "./islands/ScrollToTop.tsx";
 import * as $ScrollingMenu from "./islands/ScrollingMenu.tsx";
 import * as $SmartDashboard from "./islands/SmartDashboard.tsx";
+import * as $WebLLMLoader from "./islands/WebLLMLoader.tsx";
 import * as $onboarding_PlanSelection from "./islands/onboarding/PlanSelection.tsx";
 import type { Manifest } from "$fresh/server.ts";
 
@@ -51,14 +41,10 @@ const manifest = {
     "./routes/_404.tsx": $_404,
     "./routes/_app.tsx": $_app,
     "./routes/_middleware.ts": $_middleware,
-    "./routes/admin/_middleware.ts": $admin_middleware,
-    "./routes/admin/oauth/callback.ts": $admin_oauth_callback,
-    "./routes/admin/oauth/signin.ts": $admin_oauth_signin,
-    "./routes/admin/oauth/signout.ts": $admin_oauth_signout,
-    "./routes/admin/users.tsx": $admin_users,
     "./routes/api/analytics/approve.ts": $api_analytics_approve,
     "./routes/api/analytics/profile.ts": $api_analytics_profile,
     "./routes/api/analytics/query.ts": $api_analytics_query,
+    "./routes/api/ld-config.ts": $api_ld_config,
     "./routes/api/metadata/get-table.ts": $api_metadata_get_table,
     "./routes/api/metadata/get-tables.ts": $api_metadata_get_tables,
     "./routes/api/metadata/register-table.ts": $api_metadata_register_table,
@@ -70,27 +56,21 @@ const manifest = {
     "./routes/api/query/cache.ts": $api_query_cache,
     "./routes/api/query/find-similar.ts": $api_query_find_similar,
     "./routes/api/track.ts": $api_track,
-    "./routes/app/_middleware.ts": $app_middleware,
     "./routes/app/dashboard.tsx": $app_dashboard,
     "./routes/app/index.tsx": $app_index,
     "./routes/app/loading.tsx": $app_loading,
-    "./routes/auth/callback.ts": $auth_callback,
-    "./routes/auth/signin.ts": $auth_signin,
-    "./routes/auth/signout.ts": $auth_signout,
     "./routes/health.ts": $health,
     "./routes/index.tsx": $index,
-    "./routes/onboarding/_middleware.ts": $onboarding_middleware,
     "./routes/onboarding/plans.tsx": $onboarding_plans,
   },
   islands: {
     "./islands/DataCatalog.tsx": $DataCatalog,
     "./islands/ObservablePlot.tsx": $ObservablePlot,
-    "./islands/PieLoading.tsx": $PieLoading,
-    "./islands/PlanSelection.tsx": $PlanSelection,
     "./islands/QueryHistory.tsx": $QueryHistory,
     "./islands/ScrollToTop.tsx": $ScrollToTop,
     "./islands/ScrollingMenu.tsx": $ScrollingMenu,
     "./islands/SmartDashboard.tsx": $SmartDashboard,
+    "./islands/WebLLMLoader.tsx": $WebLLMLoader,
     "./islands/onboarding/PlanSelection.tsx": $onboarding_PlanSelection,
   },
   baseUrl: import.meta.url,
