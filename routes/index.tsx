@@ -16,6 +16,7 @@ export default function Home() {
         <meta property="og:image" content="/nerdy_alligator_headshot.png" />
         <meta property="og:url" content="https://dasgata.com" />
         <meta name="twitter:card" content="summary_large_image" />
+        <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
       </Head>
       
       <Nav />

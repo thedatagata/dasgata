@@ -1,130 +1,115 @@
+// islands/PlanSelection.tsx
 import { useState } from "preact/hooks";
 
-interface Plan {
-  id: string;
-  name: string;
-  price: string;
-  features: string[];
-  color: string;
-  recommended?: boolean;
+interface PlanSelectionProps {
+  onSelectPlan: (plan: 'starter' | 'smarter') => void;
 }
 
-export default function PlanSelection() {
-  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-
-  const plans: Plan[] = [
-    {
-      id: "base",
-      name: "Base",
-      price: "$49/month",
-      features: [
-        "Streaming data from MotherDuck",
-        "MotherDuck AI query generation",
-        "Basic analytics & visualizations",
-        "Up to 100,000 events/month",
-        "Community support"
-      ],
-      color: "from-blue-500 to-blue-600"
-    },
-    {
-      id: "premium",
-      name: "Premium",
-      price: "$199/month",
-      features: [
-        "Everything in Base, plus:",
-        "WebLLM AI-powered insights",
-        "DuckDB-WASM materialization",
-        "Advanced semantic layer",
-        "Unlimited events",
-        "Priority support",
-        "API access"
-      ],
-      color: "from-[#90C137] to-[#186018]",
-      recommended: true
-    }
-  ];
-
-  const handlePlanSelect = async (planId: string) => {
-    setSelectedPlan(planId);
-    setIsLoading(true);
-
-    try {
-      const response = await fetch('/api/onboarding/complete', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan: planId })
-      });
-
-      if (response.ok) {
-        window.location.href = planId === 'premium' ? '/app/loading' : '/app/dashboard';
-      } else {
-        alert('Error selecting plan. Please try again.');
-        setIsLoading(false);
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      alert('Connection error. Please try again.');
-      setIsLoading(false);
-    }
-  };
-
+export default function PlanSelection({ onSelectPlan }: PlanSelectionProps) {
   return (
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-      <div class="text-center mb-16">
-        <h1 class="text-5xl md:text-6xl font-bold text-[#F8F6F0] mb-4">
-          Choose Your Plan
-        </h1>
-        <p class="text-xl text-[#F8F6F0]/80 max-w-2xl mx-auto">
-          Start your analytics journey with the plan that fits your needs
-        </p>
-      </div>
+    <div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
+      <div class="max-w-6xl w-full">
+        {/* Header */}
+        <div class="text-center mb-12">
+          <h1 class="text-4xl font-bold text-gray-900 mb-3">Choose Your Analytics Experience</h1>
+          <p class="text-lg text-gray-600">Select the dashboard that fits your needs</p>
+        </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-        {plans.map((plan) => (
-          <div
-            key={plan.id}
-            class={`relative bg-gradient-to-br ${plan.color} p-8 rounded-2xl shadow-2xl transform transition-all duration-300 hover:-translate-y-2 ${
-              selectedPlan === plan.id ? 'ring-4 ring-white' : ''
-            }`}
-          >
-            {plan.recommended && (
-              <div class="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                <span class="bg-yellow-400 text-gray-900 text-sm font-bold px-4 py-1 rounded-full">
-                  RECOMMENDED
-                </span>
-              </div>
-            )}
-
+        {/* Plans Grid */}
+        <div class="grid md:grid-cols-2 gap-8">
+          {/* Starter Plan */}
+          <div class="bg-white rounded-2xl shadow-xl p-8 border-2 border-gray-200 hover:border-blue-300 transition-all">
             <div class="text-center mb-6">
-              <h3 class="text-3xl font-bold text-white mb-2">{plan.name}</h3>
-              <p class="text-2xl text-white/90 font-light">{plan.price}</p>
+              <div class="inline-block p-3 bg-gray-100 rounded-full mb-4">
+                <span class="text-4xl">📊</span>
+              </div>
+              <h2 class="text-2xl font-bold text-gray-900 mb-2">Starter Dashboard</h2>
+              <p class="text-gray-600">Traditional analytics workflow</p>
             </div>
 
             <ul class="space-y-3 mb-8">
-              {plan.features.map((feature, idx) => (
-                <li key={idx} class="flex items-start text-white/90">
-                  <svg class="w-5 h-5 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                  </svg>
-                  <span>{feature}</span>
-                </li>
-              ))}
+              <li class="flex items-start">
+                <span class="text-green-500 mr-2">✓</span>
+                <span class="text-gray-700">Manual table selection</span>
+              </li>
+              <li class="flex items-start">
+                <span class="text-green-500 mr-2">✓</span>
+                <span class="text-gray-700">SQL query generation with MotherDuck AI</span>
+              </li>
+              <li class="flex items-start">
+                <span class="text-green-500 mr-2">✓</span>
+                <span class="text-gray-700">Observable Plot visualizations</span>
+              </li>
+              <li class="flex items-start">
+                <span class="text-green-500 mr-2">✓</span>
+                <span class="text-gray-700">Step-by-step workflow</span>
+              </li>
             </ul>
 
             <button
-              onClick={() => handlePlanSelect(plan.id)}
-              disabled={isLoading}
-              class={`w-full py-3 px-6 rounded-lg font-bold text-lg transition-all ${
-                isLoading && selectedPlan === plan.id
-                  ? 'bg-white/50 cursor-wait'
-                  : 'bg-white text-gray-900 hover:bg-gray-100 active:scale-95'
-              }`}
+              onClick={() => onSelectPlan('starter')}
+              class="w-full py-3 px-6 bg-gray-600 text-white rounded-lg font-semibold hover:bg-gray-700 transition-colors"
             >
-              {isLoading && selectedPlan === plan.id ? 'Loading...' : 'Get Started'}
+              Start with Starter
             </button>
           </div>
-        ))}
+
+          {/* Smarter Plan */}
+          <div class="bg-white rounded-2xl shadow-xl p-8 border-2 border-blue-500 hover:border-blue-600 transition-all relative">
+            <div class="absolute -top-4 left-1/2 transform -translate-x-1/2">
+              <span class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-1 rounded-full text-sm font-semibold">
+                ✨ AI-Powered
+              </span>
+            </div>
+
+            <div class="text-center mb-6">
+              <div class="inline-block p-3 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full mb-4">
+                <span class="text-4xl">🤖</span>
+              </div>
+              <h2 class="text-2xl font-bold text-gray-900 mb-2">Smarter Dashboard</h2>
+              <p class="text-gray-600">AI-powered semantic analytics</p>
+            </div>
+
+            <ul class="space-y-3 mb-8">
+              <li class="flex items-start">
+                <span class="text-blue-500 mr-2">✓</span>
+                <span class="text-gray-700">Pre-built sessions & user dashboards</span>
+              </li>
+              <li class="flex items-start">
+                <span class="text-blue-500 mr-2">✓</span>
+                <span class="text-gray-700">Natural language queries with WebLLM</span>
+              </li>
+              <li class="flex items-start">
+                <span class="text-blue-500 mr-2">✓</span>
+                <span class="text-gray-700">Automatic chart generation (BSL-style)</span>
+              </li>
+              <li class="flex items-start">
+                <span class="text-blue-500 mr-2">✓</span>
+                <span class="text-gray-700">Interactive Plotly visualizations</span>
+              </li>
+              <li class="flex items-start">
+                <span class="text-blue-500 mr-2">✓</span>
+                <span class="text-gray-700">Churn detection & RFM analysis</span>
+              </li>
+            </ul>
+
+            <button
+              onClick={() => onSelectPlan('smarter')}
+              class="w-full py-3 px-6 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg"
+            >
+              Go Smarter with AI
+            </button>
+
+            <div class="mt-4 text-center">
+              <p class="text-xs text-gray-500">⏱️ Initial setup takes 10-15 seconds</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer Note */}
+        <div class="text-center mt-8 text-sm text-gray-500">
+          💡 Both options connect to your MotherDuck database • All processing happens locally
+        </div>
       </div>
     </div>
   );

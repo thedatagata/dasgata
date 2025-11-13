@@ -17,7 +17,7 @@ export class WebLLMSemanticHandler {
 
   constructor(
     private semanticTables: { sessions: SemanticTable; users: SemanticTable },
-    private modelId: string = "Qwen2.5-Coder-7B-Instruct-q4f16_1"
+    private modelId: string = "DeepSeek-R1-Distill-Qwen-7B-q4f16_1-MLC"
   ) {
     this.systemPrompt = generateWebLLMPrompt();
   }

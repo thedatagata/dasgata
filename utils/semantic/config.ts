@@ -1,5 +1,5 @@
 // utils/semantic/config.ts
-import semanticConfig from "../../static/semantic-layer.json" assert { type: "json" };
+import semanticConfig from "../../static/semantic-layer.json" with { type: "json" };
 
 export interface SemanticConfig {
   version: number;
@@ -55,69 +55,35 @@ export function getChartConfig(chartName: string): ChartConfig | undefined {
   return semanticConfig.charts?.[chartName] as ChartConfig;
 }
 
+// Optimized for 3B model - shorter, more focused prompt
 export function generateWebLLMPrompt(): string {
   const config = getSemanticConfig();
   
-  return `You are a data analyst assistant for Amplitude session/user analytics.
+  return `You are a data analyst. Generate query specs in JSON format ONLY.
 
-# Sessions Table
-${config.sessions.description}
+# Sessions Table (${config.sessions.table})
+Dimensions: ${Object.keys(config.sessions.dimensions).join(', ')}
+Measures: ${Object.keys(config.sessions.measures).join(', ')}
+Use cookie_id for unique counts (97% anonymous).
 
-Dimensions:
-${Object.entries(config.sessions.dimensions).map(([name, dim]) => 
-  `- ${name} (${dim.type}): ${dim.description}${dim.values ? ` [${dim.values.join(', ')}]` : ''}`
-).join('\n')}
+# Users Table (${config.users.table})
+Dimensions: ${Object.keys(config.users.dimensions).join(', ')}
+Measures: ${Object.keys(config.users.measures).join(', ')}
+Use user_key for unique counts (97.65% anonymous).
 
-Measures:
-${Object.entries(config.sessions.measures).map(([name, measure]) => 
-  `- ${name}: ${measure.description} (${measure.format}${measure.currency ? ' ' + measure.currency : ''})`
-).join('\n')}
-
-# Users Table
-${config.users.description}
-
-Dimensions:
-${Object.entries(config.users.dimensions).map(([name, dim]) => 
-  `- ${name} (${dim.type}): ${dim.description}${dim.values ? ` [${dim.values.join(', ')}]` : ''}`
-).join('\n')}
-
-Measures:
-${Object.entries(config.users.measures).map(([name, measure]) => 
-  `- ${name}: ${measure.description} (${measure.format}${measure.currency ? ' ' + measure.currency : ''})`
-).join('\n')}
-
-# Important Query Rules
-1. For sessions: Use cookie_id for unique counts (97% have no user_id)
-2. For users: Use user_key for unique counts (97.65% have no user_id)
-3. Filter empty plan_tier with: current_plan_tier != ''
-4. Most users are inactive (median 352 days since last event)
-5. Revenue is concentrated (median $0, only 2-3% paying)
-
-# Response Format
-Respond with ONLY valid JSON (no markdown):
+# Response Format (CRITICAL - JSON ONLY, NO MARKDOWN)
 {
   "table": "sessions" | "users",
-  "dimensions": ["dimension1"],
+  "dimensions": ["dim1"],
   "measures": ["measure1"],
-  "filters": ["optional_filter"],
-  "explanation": "Brief explanation"
+  "filters": ["filter"],
+  "explanation": "what this shows"
 }
 
 # Examples
-User: "Show conversion rate by traffic source"
-{
-  "table": "sessions",
-  "dimensions": ["traffic_source"],
-  "measures": ["conversion_rate"],
-  "explanation": "Conversion rates by traffic source"
-}
+"conversion rate by source" → {"table":"sessions","dimensions":["traffic_source"],"measures":["conversion_rate"],"explanation":"Conversion rates by traffic source"}
 
-User: "Active users by plan tier"
-{
-  "table": "users",
-  "dimensions": ["current_plan_tier"],
-  "measures": ["active_users"],
-  "filters": ["current_plan_tier != ''"],
-  "explanation": "Active users grouped by subscription tier"
-}`;
+"active users by plan" → {"table":"users","dimensions":["current_plan_tier"],"measures":["active_users"],"filters":["current_plan_tier != ''"],"explanation":"Active users by subscription tier"}
+
+"revenue over time" → {"table":"sessions","dimensions":["session_date"],"measures":["total_revenue"],"explanation":"Revenue trends over time"}`;
 }

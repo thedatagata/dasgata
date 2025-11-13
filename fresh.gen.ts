@@ -12,16 +12,26 @@ import * as $api_metadata_get_table from "./routes/api/metadata/get-table.ts";
 import * as $api_metadata_get_tables from "./routes/api/metadata/get-tables.ts";
 import * as $api_metadata_query_metadata from "./routes/api/metadata/query-metadata.ts";
 import * as $api_metadata_register_table from "./routes/api/metadata/register-table.ts";
+import * as $api_motherduck_token from "./routes/api/motherduck-token.ts";
 import * as $api_onboarding_complete from "./routes/api/onboarding/complete.ts";
 import * as $api_query_approve from "./routes/api/query/approve.ts";
 import * as $app_dashboard from "./routes/app/dashboard.tsx";
 import * as $app_index from "./routes/app/index.tsx";
 import * as $app_loading from "./routes/app/loading.tsx";
+import * as $app_smart_dashboard from "./routes/app/smart-dashboard.tsx";
 import * as $health from "./routes/health.ts";
 import * as $index from "./routes/index.tsx";
+import * as $DashboardRouter from "./islands/DashboardRouter.tsx";
 import * as $ScrollToTop from "./islands/ScrollToTop.tsx";
 import * as $ScrollingMenu from "./islands/ScrollingMenu.tsx";
 import * as $onboarding_PlanSelection from "./islands/onboarding/PlanSelection.tsx";
+import * as $smarter_dashboard_DashboardAutoChart from "./islands/smarter_dashboard/DashboardAutoChart.tsx";
+import * as $smarter_dashboard_LoadingPage from "./islands/smarter_dashboard/LoadingPage.tsx";
+import * as $smarter_dashboard_SemanticExperience from "./islands/smarter_dashboard/SemanticExperience.tsx";
+import * as $smarter_dashboard_dashboard_landing_view_CombinedDashboard from "./islands/smarter_dashboard/dashboard_landing_view/CombinedDashboard.tsx";
+import * as $smarter_dashboard_dashboard_landing_view_DashboardPage from "./islands/smarter_dashboard/dashboard_landing_view/DashboardPage.tsx";
+import * as $smarter_dashboard_dashboard_landing_view_SessionDashboard from "./islands/smarter_dashboard/dashboard_landing_view/SessionDashboard.tsx";
+import * as $smarter_dashboard_dashboard_landing_view_UserDashboard from "./islands/smarter_dashboard/dashboard_landing_view/UserDashboard.tsx";
 import * as $starter_dashboard_BaseDashboard from "./islands/starter_dashboard/BaseDashboard.tsx";
 import * as $starter_dashboard_DataCatalog from "./islands/starter_dashboard/DataCatalog.tsx";
 import * as $starter_dashboard_ObservablePlot from "./islands/starter_dashboard/ObservablePlot.tsx";
@@ -39,18 +49,32 @@ const manifest = {
     "./routes/api/metadata/get-tables.ts": $api_metadata_get_tables,
     "./routes/api/metadata/query-metadata.ts": $api_metadata_query_metadata,
     "./routes/api/metadata/register-table.ts": $api_metadata_register_table,
+    "./routes/api/motherduck-token.ts": $api_motherduck_token,
     "./routes/api/onboarding/complete.ts": $api_onboarding_complete,
     "./routes/api/query/approve.ts": $api_query_approve,
     "./routes/app/dashboard.tsx": $app_dashboard,
     "./routes/app/index.tsx": $app_index,
     "./routes/app/loading.tsx": $app_loading,
+    "./routes/app/smart-dashboard.tsx": $app_smart_dashboard,
     "./routes/health.ts": $health,
     "./routes/index.tsx": $index,
   },
   islands: {
+    "./islands/DashboardRouter.tsx": $DashboardRouter,
     "./islands/ScrollToTop.tsx": $ScrollToTop,
     "./islands/ScrollingMenu.tsx": $ScrollingMenu,
     "./islands/onboarding/PlanSelection.tsx": $onboarding_PlanSelection,
+    "./islands/smarter_dashboard/DashboardAutoChart.tsx": $smarter_dashboard_DashboardAutoChart,
+    "./islands/smarter_dashboard/LoadingPage.tsx": $smarter_dashboard_LoadingPage,
+    "./islands/smarter_dashboard/SemanticExperience.tsx": $smarter_dashboard_SemanticExperience,
+    "./islands/smarter_dashboard/dashboard_landing_view/CombinedDashboard.tsx":
+      $smarter_dashboard_dashboard_landing_view_CombinedDashboard,
+    "./islands/smarter_dashboard/dashboard_landing_view/DashboardPage.tsx":
+      $smarter_dashboard_dashboard_landing_view_DashboardPage,
+    "./islands/smarter_dashboard/dashboard_landing_view/SessionDashboard.tsx":
+      $smarter_dashboard_dashboard_landing_view_SessionDashboard,
+    "./islands/smarter_dashboard/dashboard_landing_view/UserDashboard.tsx":
+      $smarter_dashboard_dashboard_landing_view_UserDashboard,
     "./islands/starter_dashboard/BaseDashboard.tsx": $starter_dashboard_BaseDashboard,
     "./islands/starter_dashboard/DataCatalog.tsx": $starter_dashboard_DataCatalog,
     "./islands/starter_dashboard/ObservablePlot.tsx": $starter_dashboard_ObservablePlot,

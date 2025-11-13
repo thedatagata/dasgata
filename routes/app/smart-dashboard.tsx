@@ -1,28 +1,20 @@
-// routes/app/dashboard.tsx
 import { PageProps, Handlers } from "$fresh/server.ts";
-import DashboardRouter from "../../islands/DashboardRouter.tsx";
+import SmartDashboardApp from "../../islands/smarter_dashboard/dashboard_landing_view/SessionDashboard.tsx";
 
-interface DashboardData {
-  motherDuckToken: string;
-  sessionId: string;
-}
-
-export const handler: Handlers<DashboardData> = {
+export const handler: Handlers = {
   async GET(req, ctx) {
     const motherDuckToken = Deno.env.get("MOTHERDUCK_TOKEN") || "";
-    const sessionId = ctx.state.sessionId;
     
-    return ctx.render({ 
-      motherDuckToken,
-      sessionId 
-    });
+    if (!motherDuckToken) {
+      return ctx.render({ error: "MOTHERDUCK_TOKEN not configured" });
+    }
+    
+    return ctx.render({ motherDuckToken });
   }
 };
 
-export default function DashboardPage({ data }: PageProps<DashboardData>) {
-  const { motherDuckToken, sessionId } = data;
-
-  if (!motherDuckToken) {
+export default function SessionDashboard({ data }: PageProps) {
+  if (data?.error) {
     return (
       <div class="min-h-screen bg-gradient-to-br from-[#172217] to-[#186018] p-8">
         <div class="max-w-2xl mx-auto">
@@ -37,10 +29,5 @@ export default function DashboardPage({ data }: PageProps<DashboardData>) {
     );
   }
 
-  return (
-    <DashboardRouter 
-      motherDuckToken={motherDuckToken}
-      sessionId={sessionId}
-    />
-  );
+  return <SmartDashboardApp />;
 }

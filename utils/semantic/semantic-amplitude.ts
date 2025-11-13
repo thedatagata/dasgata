@@ -1,5 +1,4 @@
-// utils/semantic/amplitude.ts
-import * as duckdb from "@duckdb/duckdb-wasm";
+// utils/semantic/semantic-amplitude.ts
 import { getModelConfig, type ModelConfig } from "./config.ts";
 
 interface QuerySpec {
@@ -13,7 +12,7 @@ export class SemanticTable {
   private config: ModelConfig;
 
   constructor(
-    private db: duckdb.AsyncDuckDB,
+    private db: any, // MDConnection
     private modelName: "sessions" | "users"
   ) {
     this.config = getModelConfig(modelName);
@@ -33,11 +32,8 @@ export class SemanticTable {
       ${opts.limit ? `LIMIT ${opts.limit}` : ""}
     `;
 
-    const conn = await this.db.connect();
-    const result = await conn.query(sql);
-    await conn.close();
-    
-    return result.toArray();
+    const result = await this.db.evaluateQuery(sql);
+    return result.data.toRows();
   }
 
   private getDimensionSQL(name: string): string {
@@ -45,25 +41,19 @@ export class SemanticTable {
     if (!dim) throw new Error(`Unknown dimension: ${name}`);
     
     if (dim.sql) {
-      return `(${dim.sql}) as ${name}`;
+      const sql = dim.sql.replace(/_\./g, this.config.table + ".");
+      return `(${sql}) as ${name}`;
     }
-    return `${dim.column} as ${name}`;
+    const column = dim.column?.replace(/_\./g, this.config.table + ".");
+    return `${column} as ${name}`;
   }
 
   private getMeasureSQL(name: string): string {
     const measure = this.config.measures[name];
     if (!measure) throw new Error(`Unknown measure: ${name}`);
     
-    // Convert semantic aggregation syntax to SQL
-    let sql = measure.aggregation
-      .replace(/\._\./g, '')  // Remove _. prefix
-      .replace(/COUNT\(\*\)/gi, 'COUNT(*)')
-      .replace(/SUM\(/gi, 'SUM(')
-      .replace(/AVG\(/gi, 'AVG(')
-      .replace(/MAX\(/gi, 'MAX(')
-      .replace(/MIN\(/gi, 'MIN(');
-    
-    return `${sql} as ${name}`;
+    const agg = measure.aggregation.replace(/_\./g, this.config.table + ".");
+    return `(${agg}) as ${name}`;
   }
 
   getMetadata() {
@@ -71,12 +61,12 @@ export class SemanticTable {
       table: this.config.table,
       description: this.config.description,
       dimensions: this.config.dimensions,
-      measures: this.config.measures,
+      measures: this.config.measures
     };
   }
 }
 
-export function createSemanticTables(db: duckdb.AsyncDuckDB) {
+export function createSemanticTables(db: any) {
   return {
     sessions: new SemanticTable(db, "sessions"),
     users: new SemanticTable(db, "users")
