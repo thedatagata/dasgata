@@ -6,11 +6,5 @@ if (Deno.env.get("BUILD_PHASE") !== "true") {
 
 import dev from "$fresh/dev.ts";
 import config from "./fresh.config.ts";
-import { initLaunchDarkly } from "./utils/launchdarkly.ts";
-
-// Only initialize LaunchDarkly when not in build phase
-if (Deno.env.get("BUILD_PHASE") !== "true") {
-  await initLaunchDarkly();
-}
 
 await dev(import.meta.url, "./main.ts", config);

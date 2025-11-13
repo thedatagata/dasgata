@@ -1,0 +1,206 @@
+{
+  "version": 1,
+  "sessions": {
+    "table": "amplitude.sessions_fct",
+    "description": "Session analytics (345K sessions, 97% anonymous, use cookie_id for counts)",
+    "dimensions": {
+      "session_date": {
+        "column": "_.session_date",
+        "type": "date",
+        "description": "Session date",
+        "is_time_dimension": true
+      },
+      "traffic_source": {
+        "column": "_.traffic_source",
+        "type": "string",
+        "description": "Traffic source",
+        "cardinality": "low",
+        "values": ["direct", "google_paid", "newsletter", "social", "organic", "referral"]
+      },
+      "is_customer": {
+        "column": "_.is_customer",
+        "type": "boolean",
+        "description": "Paying customer flag"
+      },
+      "plan_tier": {
+        "column": "_.plan_tier",
+        "type": "string",
+        "description": "Subscription tier",
+        "cardinality": "low",
+        "values": ["starter", "premium", "enterprise"]
+      },
+      "max_lifecycle_stage": {
+        "column": "_.max_lifecycle_stage",
+        "type": "string",
+        "description": "Lifecycle stage",
+        "cardinality": "low",
+        "values": ["awareness", "interest", "consideration", "trial", "activation", "retention"]
+      }
+    },
+    "measures": {
+      "new_sessions": {
+        "aggregation": "COUNT(DISTINCT CASE WHEN (SELECT COUNT(*) FROM amplitude.sessions_fct s2 WHERE s2.cookie_id = _.cookie_id) = 1 THEN _.cookie_id END)",
+        "description": "Sessions from first-time visitors (cookie appears once)",
+        "format": "number"
+      },
+      "returning_sessions": {
+        "aggregation": "COUNT(DISTINCT CASE WHEN (SELECT COUNT(*) FROM amplitude.sessions_fct s2 WHERE s2.cookie_id = _.cookie_id) > 1 OR _.is_identified = TRUE THEN _.cookie_id END)",
+        "description": "Sessions from repeat visitors or identified users",
+        "format": "number"
+      },
+      "new_vs_returning_rate": {
+        "aggregation": "AVG(CASE WHEN (SELECT COUNT(*) FROM amplitude.sessions_fct s2 WHERE s2.cookie_id = _.cookie_id) = 1 THEN 100.0 ELSE 0.0 END)",
+        "description": "Percentage of sessions that are new",
+        "format": "percentage",
+        "decimals": 1
+      },
+      "session_count": {
+        "aggregation": "COUNT(*)",
+        "description": "Total sessions",
+        "format": "number"
+      },
+      "unique_visitors": {
+        "aggregation": "COUNT(DISTINCT cookie_id)",
+        "description": "Unique visitors",
+        "format": "number"
+      },
+      "total_revenue": {
+        "aggregation": "SUM(session_revenue)",
+        "description": "Total revenue",
+        "format": "currency",
+        "currency": "USD"
+      },
+      "avg_revenue_per_session": {
+        "aggregation": "AVG(session_revenue)",
+        "description": "Average revenue per session",
+        "format": "currency",
+        "currency": "USD"
+      },
+      "conversion_rate": {
+        "aggregation": "AVG(CASE WHEN has_conversion = TRUE THEN 100.0 ELSE 0.0 END)",
+        "description": "Conversion rate",
+        "format": "percentage",
+        "decimals": 1
+      },
+      "avg_session_duration": {
+        "aggregation": "AVG(session_duration_seconds)",
+        "description": "Average session duration",
+        "format": "duration",
+        "unit": "seconds"
+      }
+    }
+  },
+  "users": {
+    "table": "amplitude.users_fct",
+    "description": "User metrics (235K users, 97.65% anonymous, use user_key for counts)",
+    "dimensions": {
+      "first_event_date": {
+        "column": "_.first_event_date",
+        "type": "date",
+        "description": "User acquisition date (cohort)",
+        "is_time_dimension": true
+      },
+      "last_event_date": {
+        "column": "_.last_event_date",
+        "type": "date",
+        "description": "Last activity date",
+        "is_time_dimension": true
+      },
+      "current_plan_tier": {
+        "column": "_.current_plan_tier",
+        "type": "string",
+        "description": "Current plan",
+        "cardinality": "low",
+        "values": ["starter", "premium", "enterprise"]
+      },
+      "max_lifecycle_stage_name": {
+        "column": "_.max_lifecycle_stage_name",
+        "type": "string",
+        "description": "Lifecycle stage",
+        "cardinality": "low",
+        "values": ["awareness", "interest", "consideration", "trial", "activation", "retention"]
+      },
+      "is_paying_customer": {
+        "column": "_.is_paying_customer",
+        "type": "boolean",
+        "description": "Paying customer flag"
+      },
+      "is_active_30d": {
+        "column": "_.is_active_30d",
+        "type": "boolean",
+        "description": "Active in last 30 days"
+      }
+    },
+    "measures": {
+      "user_count": {
+        "aggregation": "COUNT(*)",
+        "description": "Total users",
+        "format": "number"
+      },
+      "active_users": {
+        "aggregation": "SUM(CASE WHEN is_active_30d = TRUE THEN 1 ELSE 0 END)",
+        "description": "Active users (30d)",
+        "format": "number"
+      },
+      "paying_customers": {
+        "aggregation": "SUM(CASE WHEN is_paying_customer = TRUE THEN 1 ELSE 0 END)",
+        "description": "Paying customers",
+        "format": "number"
+      },
+      "total_ltv": {
+        "aggregation": "SUM(total_revenue)",
+        "description": "Total lifetime value",
+        "format": "currency",
+        "currency": "USD"
+      },
+      "avg_ltv": {
+        "aggregation": "AVG(total_revenue)",
+        "description": "Average LTV",
+        "format": "currency",
+        "currency": "USD"
+      },
+      "avg_sessions_per_user": {
+        "aggregation": "AVG(total_sessions)",
+        "description": "Average sessions per user",
+        "format": "number",
+        "decimals": 1
+      },
+      "retention_rate_30d": {
+        "aggregation": "AVG(CASE WHEN is_active_30d = TRUE THEN 100.0 ELSE 0.0 END)",
+        "description": "30-day retention rate",
+        "format": "percentage",
+        "decimals": 1
+      }
+    }
+  },
+  "charts": {
+    "sessions_over_time": {
+      "model": "sessions",
+      "type": "line",
+      "title": "Sessions Over Time",
+      "dimensions": ["session_date"],
+      "measures": ["session_count"]
+    },
+    "traffic_breakdown": {
+      "model": "sessions",
+      "type": "bar",
+      "title": "Sessions by Traffic Source",
+      "dimensions": ["traffic_source"],
+      "measures": ["session_count", "conversion_rate"]
+    },
+    "lifecycle_funnel": {
+      "model": "sessions",
+      "type": "funnel",
+      "title": "Lifecycle Funnel",
+      "dimensions": ["max_lifecycle_stage"],
+      "measures": ["unique_visitors"]
+    },
+    "user_cohorts": {
+      "model": "users",
+      "type": "line",
+      "title": "User Cohorts",
+      "dimensions": ["first_event_date"],
+      "measures": ["user_count", "retention_rate_30d"]
+    }
+  }
+}

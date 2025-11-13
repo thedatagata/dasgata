@@ -11,9 +11,9 @@
  * - All decisions are externalized to config, making feature flag integration simple
  */
 
-import type { TableMetadata } from "./webllm.ts";
-import { webLLMEngine } from "./webllm.ts";
-import type { MotherDuckClient } from "./motherduck-client.ts";
+import type { TableMetadata } from "../services/webllm.ts";
+import { webLLMEngine } from "../services/webllm.ts";
+import type { MotherDuckClient } from "../services/motherduck-client.ts";
 
 /**
  * Query generation providers

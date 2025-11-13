@@ -1,6 +1,6 @@
 // routes/api/analytics/profile.ts
 import { Handlers } from "$fresh/server.ts";
-import { createMotherDuckClient } from "../../../utils/motherduck-client.ts";
+import { createMotherDuckClient } from "../../../utils/services/motherduck-client.ts";
 import { TableProfiler } from "../../../utils/analytics/table-profiler.ts";
 
 export const handler: Handlers = {

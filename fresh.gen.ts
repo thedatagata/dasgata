@@ -8,32 +8,23 @@ import * as $_middleware from "./routes/_middleware.ts";
 import * as $api_analytics_approve from "./routes/api/analytics/approve.ts";
 import * as $api_analytics_profile from "./routes/api/analytics/profile.ts";
 import * as $api_analytics_query from "./routes/api/analytics/query.ts";
-import * as $api_ld_config from "./routes/api/ld-config.ts";
 import * as $api_metadata_get_table from "./routes/api/metadata/get-table.ts";
 import * as $api_metadata_get_tables from "./routes/api/metadata/get-tables.ts";
+import * as $api_metadata_query_metadata from "./routes/api/metadata/query-metadata.ts";
 import * as $api_metadata_register_table from "./routes/api/metadata/register-table.ts";
-import * as $api_metadata_stats from "./routes/api/metadata/stats.ts";
 import * as $api_onboarding_complete from "./routes/api/onboarding/complete.ts";
-import * as $api_query_enhanced from "./routes/api/query-enhanced.ts";
-import * as $api_query from "./routes/api/query.ts";
 import * as $api_query_approve from "./routes/api/query/approve.ts";
-import * as $api_query_cache from "./routes/api/query/cache.ts";
-import * as $api_query_find_similar from "./routes/api/query/find-similar.ts";
-import * as $api_track from "./routes/api/track.ts";
 import * as $app_dashboard from "./routes/app/dashboard.tsx";
 import * as $app_index from "./routes/app/index.tsx";
 import * as $app_loading from "./routes/app/loading.tsx";
 import * as $health from "./routes/health.ts";
 import * as $index from "./routes/index.tsx";
-import * as $onboarding_plans from "./routes/onboarding/plans.tsx";
-import * as $DataCatalog from "./islands/DataCatalog.tsx";
-import * as $ObservablePlot from "./islands/ObservablePlot.tsx";
-import * as $QueryHistory from "./islands/QueryHistory.tsx";
 import * as $ScrollToTop from "./islands/ScrollToTop.tsx";
 import * as $ScrollingMenu from "./islands/ScrollingMenu.tsx";
-import * as $SmartDashboard from "./islands/SmartDashboard.tsx";
-import * as $WebLLMLoader from "./islands/WebLLMLoader.tsx";
 import * as $onboarding_PlanSelection from "./islands/onboarding/PlanSelection.tsx";
+import * as $starter_dashboard_BaseDashboard from "./islands/starter_dashboard/BaseDashboard.tsx";
+import * as $starter_dashboard_DataCatalog from "./islands/starter_dashboard/DataCatalog.tsx";
+import * as $starter_dashboard_ObservablePlot from "./islands/starter_dashboard/ObservablePlot.tsx";
 import type { Manifest } from "$fresh/server.ts";
 
 const manifest = {
@@ -44,34 +35,25 @@ const manifest = {
     "./routes/api/analytics/approve.ts": $api_analytics_approve,
     "./routes/api/analytics/profile.ts": $api_analytics_profile,
     "./routes/api/analytics/query.ts": $api_analytics_query,
-    "./routes/api/ld-config.ts": $api_ld_config,
     "./routes/api/metadata/get-table.ts": $api_metadata_get_table,
     "./routes/api/metadata/get-tables.ts": $api_metadata_get_tables,
+    "./routes/api/metadata/query-metadata.ts": $api_metadata_query_metadata,
     "./routes/api/metadata/register-table.ts": $api_metadata_register_table,
-    "./routes/api/metadata/stats.ts": $api_metadata_stats,
     "./routes/api/onboarding/complete.ts": $api_onboarding_complete,
-    "./routes/api/query-enhanced.ts": $api_query_enhanced,
-    "./routes/api/query.ts": $api_query,
     "./routes/api/query/approve.ts": $api_query_approve,
-    "./routes/api/query/cache.ts": $api_query_cache,
-    "./routes/api/query/find-similar.ts": $api_query_find_similar,
-    "./routes/api/track.ts": $api_track,
     "./routes/app/dashboard.tsx": $app_dashboard,
     "./routes/app/index.tsx": $app_index,
     "./routes/app/loading.tsx": $app_loading,
     "./routes/health.ts": $health,
     "./routes/index.tsx": $index,
-    "./routes/onboarding/plans.tsx": $onboarding_plans,
   },
   islands: {
-    "./islands/DataCatalog.tsx": $DataCatalog,
-    "./islands/ObservablePlot.tsx": $ObservablePlot,
-    "./islands/QueryHistory.tsx": $QueryHistory,
     "./islands/ScrollToTop.tsx": $ScrollToTop,
     "./islands/ScrollingMenu.tsx": $ScrollingMenu,
-    "./islands/SmartDashboard.tsx": $SmartDashboard,
-    "./islands/WebLLMLoader.tsx": $WebLLMLoader,
     "./islands/onboarding/PlanSelection.tsx": $onboarding_PlanSelection,
+    "./islands/starter_dashboard/BaseDashboard.tsx": $starter_dashboard_BaseDashboard,
+    "./islands/starter_dashboard/DataCatalog.tsx": $starter_dashboard_DataCatalog,
+    "./islands/starter_dashboard/ObservablePlot.tsx": $starter_dashboard_ObservablePlot,
   },
   baseUrl: import.meta.url,
 } satisfies Manifest;

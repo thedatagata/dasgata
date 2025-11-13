@@ -1,10 +1,9 @@
 import { PageProps, Handlers } from "$fresh/server.ts";
-import { getKv } from "../../utils/db.ts";
-import SmartDashboard from "../../islands/SmartDashboard.tsx";
+import { getKv } from "../../utils/system/db.ts";
+import BaseDashboard from "../../islands/starter_dashboard/BaseDashboard.tsx";
 
 interface DashboardData {
   motherDuckToken: string;
-  planTier: "base" | "premium";
   sessionId: string;
 }
 
@@ -13,20 +12,15 @@ export const handler: Handlers<DashboardData> = {
     const motherDuckToken = Deno.env.get("MOTHERDUCK_TOKEN") || "";
     const sessionId = ctx.state.sessionId;
     
-    const kv = getKv();
-    const planData = await kv.get(["user_plan", sessionId]);
-    const planTier = (planData.value?.plan as "base" | "premium") || "base";
-    
     return ctx.render({ 
-      motherDuckToken, 
-      planTier,
+      motherDuckToken,
       sessionId 
     });
   }
 };
 
 export default function DashboardPage({ data }: PageProps<DashboardData>) {
-  const { motherDuckToken, planTier, sessionId } = data;
+  const { motherDuckToken, sessionId } = data;
 
   if (!motherDuckToken) {
     return (
@@ -62,11 +56,8 @@ export default function DashboardPage({ data }: PageProps<DashboardData>) {
             </a>
             
             <div class="flex items-center space-x-4">
-              <span class="text-[#F8F6F0]/70 text-sm">
-                {planTier === "premium" ? "Premium Plan" : "Base Plan"}
-              </span>
               <a 
-                href="/" 
+                href="/app" 
                 class="text-[#F8F6F0]/90 hover:text-[#90C137] transition-colors text-sm font-medium"
               >
                 ← Back
@@ -77,9 +68,8 @@ export default function DashboardPage({ data }: PageProps<DashboardData>) {
       </nav>
 
       <main class="pt-20">
-        <SmartDashboard 
-          motherDuckToken={motherDuckToken} 
-          planTier={planTier}
+        <BaseDashboard 
+          motherDuckToken={motherDuckToken}
           sessionId={sessionId}
         />
       </main>

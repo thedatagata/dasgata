@@ -1,11 +1,8 @@
 // utils/analytics/unified-query-service.ts
 /**
- * Unified query service - routes queries to correct engine (memory vs cloud)
- * and handles execution with caching
+ * MotherDuck query service for Base Dashboard (Starter Plan)
+ * Uses MotherDuck PROMPT for natural language SQL generation
  */
-
-import { webLLMEngine, type TableMetadata } from "../webllm.ts";
-import { findSimilar, type SimilarityResult } from "./text-similarity.ts";
 
 export interface QueryRequest {
   question: string;
@@ -17,13 +14,13 @@ export interface QueryResponse {
   sql: string;
   results: any[];
   executionTime: number;
-  engine: 'webllm' | 'motherduck-ai' | 'cached';
-  source: 'memory' | 'motherduck';
+  engine: 'motherduck-ai' | 'cached';
+  source: 'motherduck';
   rowCount: number;
   columnCount: number;
   explanation?: string;
-  sqlExplanation?: string; // from prompt_explain
-  promptSimilarity?: number; // similarity between prompt and explanation
+  sqlExplanation?: string;
+  promptSimilarity?: number;
   fromCache?: boolean;
 }
 
@@ -42,7 +39,7 @@ export class UnifiedQueryService {
   }
   
   /**
-   * Execute natural language query with automatic routing
+   * Execute natural language query using MotherDuck PROMPT
    */
   async executeQuery(request: QueryRequest): Promise<QueryResponse> {
     const startTime = performance.now();
@@ -59,30 +56,14 @@ export class UnifiedQueryService {
       };
     }
     
-    // Determine table location and route accordingly
-    const tableLocation = await this.getTableLocation(request.tableName);
+    // Generate SQL using MotherDuck AI
+    const result = await this.generateSQLWithMotherDuckAI(
+      request.question,
+      request.tableName
+    );
     
-    let sql: string;
-    let explanation: string | undefined;
-    let engine: 'webllm' | 'motherduck-ai';
-    
-    if (tableLocation === 'memory') {
-      // Use WebLLM for materialized tables
-      const metadata = await this.getTableMetadata(request.tableName);
-      const result = await webLLMEngine.generateSQL(request.question, [metadata]);
-      sql = result.sql;
-      explanation = result.explanation;
-      engine = 'webllm';
-    } else {
-      // Use MotherDuck AI for streaming tables
-      const result = await this.generateSQLWithMotherDuckAI(
-        request.question,
-        request.tableName
-      );
-      sql = result.sql;
-      explanation = result.explanation;
-      engine = 'motherduck-ai';
-    }
+    const sql = result.sql;
+    const explanation = result.explanation;
     
     // Execute query
     const queryResult = await this.db.evaluateQuery(sql);
@@ -92,21 +73,17 @@ export class UnifiedQueryService {
     let sqlExplanation: string | undefined;
     let promptSimilarity: number | undefined;
     
-    if (tableLocation === 'motherduck') {
-      try {
-        const explainResult = await this.db.evaluateQuery(
-          `SELECT explanation FROM prompt_explain('${sql.replace(/'/g, "''")}') LIMIT 1`
-        );
-        const explainRows = explainResult.data.toRows();
-        if (explainRows.length > 0) {
-          sqlExplanation = explainRows[0].explanation;
-          
-          // Calculate similarity between prompt and SQL explanation
-          promptSimilarity = this.calculateSimilarity(request.question, sqlExplanation);
-        }
-      } catch (error) {
-        console.warn('prompt_explain failed:', error);
+    try {
+      const explainResult = await this.db.evaluateQuery(
+        `SELECT explanation FROM prompt_explain('${sql.replace(/'/g, "''")}') LIMIT 1`
+      );
+      const explainRows = explainResult.data.toRows();
+      if (explainRows.length > 0) {
+        sqlExplanation = explainRows[0].explanation;
+        promptSimilarity = this.calculateSimilarity(request.question, sqlExplanation);
       }
+    } catch (error) {
+      console.warn('prompt_explain failed:', error);
     }
     
     const executionTime = performance.now() - startTime;
@@ -115,8 +92,8 @@ export class UnifiedQueryService {
       sql,
       results,
       executionTime,
-      engine,
-      source: tableLocation,
+      engine: 'motherduck-ai',
+      source: 'motherduck',
       rowCount: results.length,
       columnCount: results.length > 0 ? Object.keys(results[0]).length : 0,
       explanation,
@@ -131,7 +108,7 @@ export class UnifiedQueryService {
   }
   
   /**
-   * Generate SQL using MotherDuck AI
+   * Generate SQL using MotherDuck AI PROMPT
    */
   private async generateSQLWithMotherDuckAI(
     question: string,
@@ -161,56 +138,7 @@ export class UnifiedQueryService {
   }
   
   /**
-   * Get table location (memory or motherduck)
-   */
-  private async getTableLocation(tableName: string): Promise<'memory' | 'motherduck'> {
-    const fullyQualified = this.parseTableName(tableName);
-    
-    // Check if table exists in memory
-    const checkQuery = `
-      SELECT COUNT(*) as exists
-      FROM duckdb_tables()
-      WHERE database_name = 'memory'
-        AND schema_name = '${fullyQualified.schema}'
-        AND table_name = '${fullyQualified.table}'
-    `;
-    
-    const result = await this.db.evaluateQuery(checkQuery);
-    const exists = result.data.toRows()[0].exists > 0;
-    
-    return exists ? 'memory' : 'motherduck';
-  }
-  
-  /**
-   * Get table metadata for WebLLM
-   */
-  private async getTableMetadata(tableName: string): Promise<TableMetadata> {
-    const fullyQualified = this.parseTableName(tableName);
-    
-    // Get column information
-    const columnsQuery = `
-      SELECT 
-        column_name,
-        data_type
-      FROM information_schema.columns
-      WHERE table_schema = '${fullyQualified.schema}'
-        AND table_name = '${fullyQualified.table}'
-      ORDER BY ordinal_position
-    `;
-    
-    const result = await this.db.evaluateQuery(columnsQuery);
-    const columns = result.data.toRows();
-    
-    return {
-      name: tableName,
-      schema: columns.map(c => `${c.column_name} ${c.data_type}`).join('\n'),
-      description: `Table: ${tableName}`,
-      sampleQueries: []
-    };
-  }
-  
-  /**
-   * Generate suggested follow-up prompts based on results and domain context
+   * Generate suggested follow-up prompts based on results
    */
   generateSuggestedPrompts(
     originalQuestion: string,
@@ -309,14 +237,13 @@ export class UnifiedQueryService {
   }
   
   /**
-   * Approve query for caching (marks as permanent)
+   * Approve query for caching
    */
   async approveQuery(question: string, tableName: string): Promise<void> {
     const cacheKey = this.getCacheKey(question, tableName);
     const cached = this.cache.get(cacheKey);
     
     if (cached) {
-      // Store in persistent cache (Deno KV)
       const kv = await Deno.openKv();
       await kv.set(
         ['approved_queries', tableName, cacheKey],
@@ -328,46 +255,6 @@ export class UnifiedQueryService {
       );
       console.log(`✅ Approved query: ${question}`);
     }
-  }
-  
-  /**
-   * Find similar approved queries using cosine similarity
-   */
-  async findSimilarQueries(
-    question: string,
-    tableName: string,
-    limit: number = 3
-  ): Promise<Array<{ question: string; sql: string; score: number }>> {
-    const kv = await Deno.openKv();
-    const approvedQueries: Array<{ question: string; sql: string }> = [];
-    
-    // Get all approved queries for this table
-    const iter = kv.list({ prefix: ['approved_queries', tableName] });
-    for await (const entry of iter) {
-      const data = entry.value as any;
-      approvedQueries.push({
-        question: data.question,
-        sql: data.sql
-      });
-    }
-    
-    if (approvedQueries.length === 0) {
-      return [];
-    }
-    
-    // Find similar questions
-    const candidates = approvedQueries.map(q => q.question);
-    const similar = findSimilar(question, candidates, 0.4, limit);
-    
-    // Map back to full query objects
-    return similar.map(s => {
-      const query = approvedQueries.find(q => q.question === s.text)!;
-      return {
-        question: query.question,
-        sql: query.sql,
-        score: s.score
-      };
-    });
   }
   
   /**
@@ -406,7 +293,6 @@ export class UnifiedQueryService {
   private isDateValue(value: any): boolean {
     if (value instanceof Date) return true;
     if (typeof value === 'string') {
-      // Simple date pattern check
       return /^\d{4}-\d{2}-\d{2}/.test(value);
     }
     return false;

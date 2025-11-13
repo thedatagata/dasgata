@@ -1,6 +1,6 @@
 // routes/api/metadata/get-tables.ts
 import { Handlers } from "$fresh/server.ts";
-import { getAllTables, getTableMetadata } from "../../../utils/query-metadata.ts";
+import { getAllTables, getTableMetadata } from "./query-metadata.ts";
 
 export const handler: Handlers = {
   async GET(req) {

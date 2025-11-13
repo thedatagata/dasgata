@@ -1,6 +1,6 @@
 import { useEffect, useState } from "preact/hooks";
-import { createMotherDuckClient } from "../utils/motherduck-client.ts";
-import { TableConfigManager } from "../utils/table-config.ts";
+import { createMotherDuckClient } from "../../utils/services/motherduck-client.ts";
+import { TableConfigManager } from "../../utils/analytics/table-config.ts";
 
 interface DataCatalogProps {
   motherDuckToken: string;

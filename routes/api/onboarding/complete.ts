@@ -1,5 +1,5 @@
 import { Handlers } from "$fresh/server.ts";
-import { getKv } from "../../../utils/db.ts";
+import { getKv } from "../../../utils/system/db.ts";
 
 export const handler: Handlers = {
   async POST(req, ctx) {
