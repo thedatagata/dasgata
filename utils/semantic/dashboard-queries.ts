@@ -8,7 +8,7 @@ export interface DashboardQuery {
   filters?: string[];
   title: string;
   description: string;
-  chartType: 'kpi' | 'bar' | 'line' | 'funnel' | 'heatmap' | 'scatter';
+  chartType: "kpi" | "bar" | "line" | "funnel" | "heatmap" | "scatter";
   chartConfig?: any;
 }
 
@@ -22,7 +22,7 @@ export const sessionsDashboardQueries: DashboardQuery[] = [
     filters: ["session_date >= CURRENT_DATE - INTERVAL '30 days'"],
     title: "Total Revenue (30d)",
     description: "Last 30 days vs previous 30 days",
-    chartType: "kpi"
+    chartType: "kpi",
   },
   {
     id: "sessions_new_vs_returning",
@@ -31,7 +31,7 @@ export const sessionsDashboardQueries: DashboardQuery[] = [
     filters: ["session_date >= CURRENT_DATE - INTERVAL '30 days'"],
     title: "New vs Returning (30d)",
     description: "Visitor composition",
-    chartType: "kpi"
+    chartType: "kpi",
   },
   {
     id: "sessions_activation_rate",
@@ -40,13 +40,13 @@ export const sessionsDashboardQueries: DashboardQuery[] = [
     measures: ["session_count"],
     filters: [
       "session_date >= CURRENT_DATE - INTERVAL '30 days'",
-      "max_lifecycle_stage IN ('trial', 'activation')"
+      "max_lifecycle_stage IN ('trial', 'activation')",
     ],
     title: "Trial & Activation (30d)",
     description: "Users reaching trial/activation stage",
-    chartType: "kpi"
+    chartType: "kpi",
   },
-  
+
   // Revenue by Plan Tier
   {
     id: "revenue_by_plan",
@@ -58,11 +58,11 @@ export const sessionsDashboardQueries: DashboardQuery[] = [
     description: "Revenue and session volume by subscription tier",
     chartType: "bar",
     chartConfig: {
-      barmode: 'group',
-      orientation: 'v'
-    }
+      barmode: "group",
+      orientation: "v",
+    },
   },
-  
+
   // New vs Returning by Traffic Source
   {
     id: "new_returning_by_source",
@@ -73,23 +73,25 @@ export const sessionsDashboardQueries: DashboardQuery[] = [
     description: "Visitor composition by traffic source",
     chartType: "bar",
     chartConfig: {
-      barmode: 'group',
-      orientation: 'v'
-    }
+      barmode: "group",
+      orientation: "v",
+    },
   },
-  
+
   // Conversion Funnel by Traffic Source
   {
     id: "funnel_by_source",
     table: "sessions",
     dimensions: ["traffic_source", "max_lifecycle_stage"],
     measures: ["session_count"],
-    filters: ["max_lifecycle_stage IN ('awareness', 'consideration', 'trial', 'activation', 'retention')"],
+    filters: [
+      "max_lifecycle_stage IN ('awareness', 'consideration', 'trial', 'activation', 'retention')",
+    ],
     title: "Lifecycle Funnel by Traffic Source",
     description: "How users progress through lifecycle stages by source",
-    chartType: "funnel"
+    chartType: "funnel",
   },
-  
+
   // Sessions Over Time (for cohort curve)
   {
     id: "sessions_over_time",
@@ -99,8 +101,8 @@ export const sessionsDashboardQueries: DashboardQuery[] = [
     filters: ["session_date >= CURRENT_DATE - INTERVAL '12 weeks'"],
     title: "Session Trends (12 Weeks)",
     description: "Weekly session patterns showing retention curve",
-    chartType: "line"
-  }
+    chartType: "line",
+  },
 ];
 
 // Users Dashboard Queries
@@ -112,7 +114,7 @@ export const usersDashboardQueries: DashboardQuery[] = [
     measures: ["total_ltv"],
     title: "Total LTV",
     description: "Lifetime value across all users",
-    chartType: "kpi"
+    chartType: "kpi",
   },
   {
     id: "users_total_customers",
@@ -120,7 +122,7 @@ export const usersDashboardQueries: DashboardQuery[] = [
     measures: ["paying_customers"],
     title: "Total Paying Customers",
     description: "Current paying customer count",
-    chartType: "kpi"
+    chartType: "kpi",
   },
   {
     id: "users_retention",
@@ -130,9 +132,9 @@ export const usersDashboardQueries: DashboardQuery[] = [
     filters: ["is_paying_customer = TRUE"],
     title: "Customer Retention",
     description: "Active vs inactive paying customers",
-    chartType: "kpi"
+    chartType: "kpi",
   },
-  
+
   // RFM Analysis
   {
     id: "rfm_analysis",
@@ -142,9 +144,9 @@ export const usersDashboardQueries: DashboardQuery[] = [
     filters: ["current_plan_tier != ''"],
     title: "RFM Segmentation",
     description: "Recency, Frequency, Monetary analysis by plan tier",
-    chartType: "scatter"
+    chartType: "scatter",
   },
-  
+
   // Cohort Analysis
   {
     id: "cohort_retention",
@@ -154,9 +156,9 @@ export const usersDashboardQueries: DashboardQuery[] = [
     filters: ["first_event_date >= CURRENT_DATE - INTERVAL '12 months'"],
     title: "Monthly Cohort Retention",
     description: "Retention rates by signup cohort",
-    chartType: "heatmap"
+    chartType: "heatmap",
   },
-  
+
   // Lifecycle Distribution
   {
     id: "lifecycle_distribution",
@@ -167,11 +169,11 @@ export const usersDashboardQueries: DashboardQuery[] = [
     description: "Distribution of users across lifecycle stages",
     chartType: "bar",
     chartConfig: {
-      barmode: 'group',
-      orientation: 'h'
-    }
+      barmode: "group",
+      orientation: "h",
+    },
   },
-  
+
   // LTV by Plan Tier
   {
     id: "ltv_by_plan",
@@ -183,12 +185,12 @@ export const usersDashboardQueries: DashboardQuery[] = [
     description: "Average lifetime value and customer count by tier",
     chartType: "bar",
     chartConfig: {
-      barmode: 'group',
-      orientation: 'v'
-    }
-  }
+      barmode: "group",
+      orientation: "v",
+    },
+  },
 ];
 
 export function getQueryById(id: string): DashboardQuery | undefined {
-  return [...sessionsDashboardQueries, ...usersDashboardQueries].find(q => q.id === id);
+  return [...sessionsDashboardQueries, ...usersDashboardQueries].find((q) => q.id === id);
 }

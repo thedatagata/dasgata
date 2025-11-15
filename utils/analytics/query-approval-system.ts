@@ -1,13 +1,13 @@
 // utils/query-approval-system.ts
 /**
  * Query Approval and Caching System
- * 
+ *
  * This service manages:
  * 1. Storing approved queries with their natural language prompts
  * 2. Caching recent query results
  * 3. Finding similar queries using semantic search (Transformer.js)
  * 4. Providing UI hooks for reloading cached results
- * 
+ *
  * Design is modular to allow feature flag integration later
  */
 
@@ -60,7 +60,7 @@ export interface QueryApprovalConfig {
 
 /**
  * Query Approval and Caching System
- * 
+ *
  * This service manages approved queries and query caching
  * All storage is in-memory for now, but can be moved to KV store
  */
@@ -80,11 +80,11 @@ export class QueryApprovalSystem {
    */
   approveQuery(
     queryResult: QueryResult,
-    approvedBy?: string
+    approvedBy?: string,
   ): ApprovedQuery {
     const id = this._generateQueryId(
       queryResult.naturalLanguageQuery,
-      queryResult.tableName
+      queryResult.tableName,
     );
 
     const existingQuery = this.approvedQueries.get(id);
@@ -93,9 +93,9 @@ export class QueryApprovalSystem {
       // Update existing entry
       existingQuery.executionCount++;
       existingQuery.lastExecuted = Date.now();
-      existingQuery.avgExecutionTimeMs = 
-        (existingQuery.avgExecutionTimeMs * (existingQuery.executionCount - 1) + 
-         queryResult.executed.executionTimeMs) / existingQuery.executionCount;
+      existingQuery.avgExecutionTimeMs =
+        (existingQuery.avgExecutionTimeMs * (existingQuery.executionCount - 1) +
+          queryResult.executed.executionTimeMs) / existingQuery.executionCount;
       this.approvedQueries.set(id, existingQuery);
       return existingQuery;
     }
@@ -111,7 +111,7 @@ export class QueryApprovalSystem {
       approvedBy,
       executionCount: 1,
       lastExecuted: Date.now(),
-      avgExecutionTimeMs: queryResult.executed.executionTimeMs
+      avgExecutionTimeMs: queryResult.executed.executionTimeMs,
     };
 
     this.approvedQueries.set(id, approvedQuery);
@@ -123,11 +123,11 @@ export class QueryApprovalSystem {
    */
   getApprovedQueries(tableName?: string): ApprovedQuery[] {
     const queries = Array.from(this.approvedQueries.values());
-    
+
     if (tableName) {
-      return queries.filter(q => q.tableName === tableName);
+      return queries.filter((q) => q.tableName === tableName);
     }
-    
+
     return queries.sort((a, b) => b.lastExecuted - a.lastExecuted);
   }
 
@@ -137,7 +137,7 @@ export class QueryApprovalSystem {
   cacheQuery(queryResult: QueryResult): CachedQuery {
     const id = this._generateQueryId(
       queryResult.naturalLanguageQuery,
-      queryResult.tableName
+      queryResult.tableName,
     );
 
     // Check if already cached
@@ -153,7 +153,7 @@ export class QueryApprovalSystem {
       queryResult,
       cachedAt: Date.now(),
       expiresAt: Date.now() + (this.config.cacheTTLMinutes * 60 * 1000),
-      hitCount: 0
+      hitCount: 0,
     };
 
     // Add to cache
@@ -172,7 +172,7 @@ export class QueryApprovalSystem {
    */
   getCachedQuery(
     naturalLanguageQuery: string,
-    tableName: string
+    tableName: string,
   ): QueryResult | null {
     const id = this._generateQueryId(naturalLanguageQuery, tableName);
     const cached = this.queryCache.get(id);
@@ -217,14 +217,14 @@ export class QueryApprovalSystem {
 
   /**
    * Find similar approved queries using semantic search
-   * 
+   *
    * NOTE: This is a placeholder for Transformer.js integration
    * Transformer.js would provide embeddings for semantic similarity
    */
   async findSimilarQueries(
     naturalLanguageQuery: string,
     tableName: string,
-    limit: number = 5
+    limit: number = 5,
   ): Promise<SimilarQuery[]> {
     const approvedQueries = this.getApprovedQueries(tableName);
 
@@ -244,20 +244,20 @@ export class QueryApprovalSystem {
   private _findSimilarQueriesKeyword(
     query: string,
     approvedQueries: ApprovedQuery[],
-    limit: number
+    limit: number,
   ): SimilarQuery[] {
     const queryWords = query.toLowerCase().split(/\s+/);
-    
-    const scored = approvedQueries.map(approved => {
+
+    const scored = approvedQueries.map((approved) => {
       const approvedWords = approved.naturalLanguageQuery.toLowerCase().split(/\s+/);
-      const commonWords = queryWords.filter(w => approvedWords.includes(w));
+      const commonWords = queryWords.filter((w) => approvedWords.includes(w));
       const similarity = commonWords.length / Math.max(queryWords.length, approvedWords.length);
-      
+
       return { query: approved, similarity };
     });
 
     return scored
-      .filter(s => s.similarity >= this.config.similarityThreshold)
+      .filter((s) => s.similarity >= this.config.similarityThreshold)
       .sort((a, b) => b.similarity - a.similarity)
       .slice(0, limit);
   }
@@ -311,6 +311,6 @@ export function createDefaultApprovalConfig(): QueryApprovalConfig {
     enableSemanticSearch: false, // Will enable after Transformer.js integration
     maxCachedQueries: 100,
     cacheTTLMinutes: 60,
-    similarityThreshold: 0.3
+    similarityThreshold: 0.3,
   };
 }

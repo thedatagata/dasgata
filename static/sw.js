@@ -1,5 +1,5 @@
 // static/sw.js
-importScripts('https://esm.sh/@mlc-ai/web-llm@0.2.72');
+importScripts("https://esm.sh/@mlc-ai/web-llm@0.2.72");
 
 let handler;
 

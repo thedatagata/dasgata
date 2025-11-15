@@ -52,7 +52,7 @@ export default function DataCatalog({ motherDuckToken }: DataCatalogProps) {
     async function init() {
       try {
         const c = await createMotherDuckClient(motherDuckToken);
-        await c.evaluateQuery('USE my_db;');
+        await c.evaluateQuery("USE my_db;");
         setClient(c);
         await loadCatalogData(c);
       } catch (err) {
@@ -93,14 +93,14 @@ export default function DataCatalog({ motherDuckToken }: DataCatalogProps) {
         AND internal = false
         ORDER BY schema_name, table_name
       `);
-      
+
       const tables = mdResult.data.toRows();
-      
+
       // Get AI descriptions for each table
       for (const table of tables) {
         try {
           const descResult = await c.evaluateQuery(
-            `CALL prompt_schema(include_tables=['${table.schema}.${table.table}'])`
+            `CALL prompt_schema(include_tables=['${table.schema}.${table.table}'])`,
           );
           const descRows = descResult.data.toRows();
           if (descRows.length > 0 && descRows[0].summary) {
@@ -110,11 +110,10 @@ export default function DataCatalog({ motherDuckToken }: DataCatalogProps) {
           console.warn(`Failed to get description for ${table.table}:`, err);
         }
       }
-      
-      setMotherDuckTables(tables);
 
+      setMotherDuckTables(tables);
     } catch (err) {
-      console.error('Error loading catalog:', err);
+      console.error("Error loading catalog:", err);
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
@@ -123,7 +122,7 @@ export default function DataCatalog({ motherDuckToken }: DataCatalogProps) {
 
   async function toggleTableExpansion(tableName: string, database: string, schema: string) {
     const fullName = `${database}.${schema}.${tableName}`;
-    
+
     if (expandedTable === fullName) {
       // Collapse
       setExpandedTable(null);
@@ -132,7 +131,7 @@ export default function DataCatalog({ motherDuckToken }: DataCatalogProps) {
       // Expand and load columns
       setExpandedTable(fullName);
       setLoadingColumns(true);
-      
+
       try {
         const result = await client.evaluateQuery(`
           SELECT 
@@ -149,7 +148,7 @@ export default function DataCatalog({ motherDuckToken }: DataCatalogProps) {
         `);
         setExpandedColumns(result.data.toRows());
       } catch (err) {
-        console.error('Error loading columns:', err);
+        console.error("Error loading columns:", err);
       } finally {
         setLoadingColumns(false);
       }
@@ -159,14 +158,16 @@ export default function DataCatalog({ motherDuckToken }: DataCatalogProps) {
   function openLoadDialog(table: TableInfo) {
     setLoadDialogTable(table);
     setTargetTableName(table.table);
-    setMaterializeQuery(`SELECT * FROM ${table.database}.${table.schema}.${table.table} LIMIT 10000`);
+    setMaterializeQuery(
+      `SELECT * FROM ${table.database}.${table.schema}.${table.table} LIMIT 10000`,
+    );
     setShowLoadDialog(true);
     loadPreviewData(table);
   }
 
   async function loadPreviewData(table: TableInfo) {
     if (!client) return;
-    
+
     setLoadingPreview(true);
     try {
       const result = await client.evaluateQuery(`
@@ -175,7 +176,7 @@ export default function DataCatalog({ motherDuckToken }: DataCatalogProps) {
       `);
       setPreviewData(result.data.toRows());
     } catch (err) {
-      console.error('Error loading preview:', err);
+      console.error("Error loading preview:", err);
       setPreviewData([]);
     } finally {
       setLoadingPreview(false);
@@ -184,44 +185,46 @@ export default function DataCatalog({ motherDuckToken }: DataCatalogProps) {
 
   async function executeLoad() {
     if (!client || !loadDialogTable) return;
-    
+
     setLoadingData(true);
     try {
       if (loadMode === "stream") {
         // Configure as streaming table
         TableConfigManager.configureTable(
           `${loadDialogTable.database}.${loadDialogTable.schema}.${loadDialogTable.table}`,
-          'stream',
-          'motherduck'
+          "stream",
+          "motherduck",
         );
-        
-        alert(`✅ ${loadDialogTable.database}.${loadDialogTable.schema}.${loadDialogTable.table} configured for streaming!
+
+        alert(
+          `✅ ${loadDialogTable.database}.${loadDialogTable.schema}.${loadDialogTable.table} configured for streaming!
         
 This table is now available for queries across all tabs.
-Queries will access the remote table over the network.`);
+Queries will access the remote table over the network.`,
+        );
       } else {
         await client.evaluateQuery(`
           CREATE OR REPLACE TABLE memory.main.${targetTableName} AS 
           ${materializeQuery}
         `);
-        
+
         // Configure as materialized table
         TableConfigManager.configureTable(
           `memory.main.${targetTableName}`,
-          'materialize',
-          'browser'
+          "materialize",
+          "browser",
         );
-        
+
         await loadCatalogData(client);
         setView("wasm");
         alert(`✅ Materialized ${targetTableName} in browser memory!
         
 This table is now available for queries across all tabs.`);
       }
-      
+
       setShowLoadDialog(false);
     } catch (err) {
-      console.error('Error loading table:', err);
+      console.error("Error loading table:", err);
       alert(`❌ Error: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setLoadingData(false);
@@ -239,7 +242,9 @@ This table is now available for queries across all tabs.`);
           Browse tables and columns. Click table names to expand and view schema.
         </p>
         <div class="mt-3 p-3 bg-[#90C137]/10 border border-[#90C137]/30 rounded text-sm text-[#90C137]">
-          <strong>Note:</strong> MotherDuck tables query over the network. Choose "Stream" for remote queries or "Materialize" to download data into your browser.
+          <strong>Note:</strong>{" "}
+          MotherDuck tables query over the network. Choose "Stream" for remote queries or
+          "Materialize" to download data into your browser.
         </div>
       </div>
 
@@ -256,56 +261,75 @@ This table is now available for queries across all tabs.`);
           <div class="bg-[#172217] border-2 border-[#90C137]/30 rounded-lg shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
             <div class="p-6">
               <h3 class="text-xl font-bold mb-4 text-[#F8F6F0]">
-                Load Table: <span class="text-[#90C137]">{loadDialogTable.database}.{loadDialogTable.schema}.{loadDialogTable.table}</span>
+                Load Table:{" "}
+                <span class="text-[#90C137]">
+                  {loadDialogTable.database}.{loadDialogTable.schema}.{loadDialogTable.table}
+                </span>
               </h3>
-              
+
               {/* Data Preview */}
               <div class="mb-6">
                 <h4 class="text-sm font-medium mb-2 text-[#F8F6F0]">Data Preview (First 5 Rows)</h4>
-                {loadingPreview ? (
-                  <div class="border border-[#90C137]/20 rounded p-8 text-center text-[#F8F6F0]/60">
-                    Loading preview...
-                  </div>
-                ) : previewData.length > 0 ? (
-                  <div class="border border-[#90C137]/20 rounded overflow-x-auto max-h-64 overflow-y-auto bg-[#172217]/40">
-                    <table class="min-w-full text-xs">
-                      <thead class="bg-[#90C137]/10 sticky top-0">
-                        <tr>
-                          {Object.keys(previewData[0]).map((key) => (
-                            <th key={key} class="px-2 py-1 text-left font-medium border-b border-[#90C137]/20 text-[#90C137]">
-                              {key}
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {previewData.map((row, idx) => (
-                          <tr key={idx} class="hover:bg-[#90C137]/5">
-                            {Object.values(row).map((val, i) => (
-                              <td key={i} class="px-2 py-1 border-b border-[#90C137]/10 text-[#F8F6F0]/80">
-                                {val === null ? (
-                                  <span class="text-[#F8F6F0]/40 italic">null</span>
-                                ) : typeof val === 'number' ? (
-                                  val.toLocaleString()
-                                ) : typeof val === 'boolean' ? (
-                                  val ? 'true' : 'false'
-                                ) : (
-                                  String(val).length > 50 ? String(val).substring(0, 50) + '...' : String(val)
-                                )}
-                              </td>
+                {loadingPreview
+                  ? (
+                    <div class="border border-[#90C137]/20 rounded p-8 text-center text-[#F8F6F0]/60">
+                      Loading preview...
+                    </div>
+                  )
+                  : previewData.length > 0
+                  ? (
+                    <div class="border border-[#90C137]/20 rounded overflow-x-auto max-h-64 overflow-y-auto bg-[#172217]/40">
+                      <table class="min-w-full text-xs">
+                        <thead class="bg-[#90C137]/10 sticky top-0">
+                          <tr>
+                            {Object.keys(previewData[0]).map((key) => (
+                              <th
+                                key={key}
+                                class="px-2 py-1 text-left font-medium border-b border-[#90C137]/20 text-[#90C137]"
+                              >
+                                {key}
+                              </th>
                             ))}
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <div class="border border-[#90C137]/20 rounded p-8 text-center text-[#F8F6F0]/60">
-                    No preview data available
-                  </div>
-                )}
+                        </thead>
+                        <tbody>
+                          {previewData.map((row, idx) => (
+                            <tr key={idx} class="hover:bg-[#90C137]/5">
+                              {Object.values(row).map((val, i) => (
+                                <td
+                                  key={i}
+                                  class="px-2 py-1 border-b border-[#90C137]/10 text-[#F8F6F0]/80"
+                                >
+                                  {val === null
+                                    ? <span class="text-[#F8F6F0]/40 italic">null</span>
+                                    : typeof val === "number"
+                                    ? (
+                                      val.toLocaleString()
+                                    )
+                                    : typeof val === "boolean"
+                                    ? (
+                                      val ? "true" : "false"
+                                    )
+                                    : (
+                                      String(val).length > 50
+                                        ? String(val).substring(0, 50) + "..."
+                                        : String(val)
+                                    )}
+                                </td>
+                              ))}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )
+                  : (
+                    <div class="border border-[#90C137]/20 rounded p-8 text-center text-[#F8F6F0]/60">
+                      No preview data available
+                    </div>
+                  )}
               </div>
-              
+
               {/* Mode Selection */}
               <div class="mb-6">
                 <label class="block text-sm font-medium mb-2 text-[#F8F6F0]">Connection Mode</label>
@@ -322,11 +346,12 @@ This table is now available for queries across all tabs.`);
                     <div class="flex-1">
                       <div class="font-medium text-[#F8F6F0]">🌊 Streaming Connection</div>
                       <div class="text-sm text-[#F8F6F0]/70 mt-1">
-                        Query the table remotely over the network. No data downloaded. Always up-to-date.
+                        Query the table remotely over the network. No data downloaded. Always
+                        up-to-date.
                       </div>
                     </div>
                   </label>
-                  
+
                   <label class="flex items-start space-x-3 p-3 border border-[#90C137]/30 rounded cursor-pointer hover:bg-[#90C137]/10 transition-colors">
                     <input
                       type="radio"
@@ -339,7 +364,8 @@ This table is now available for queries across all tabs.`);
                     <div class="flex-1">
                       <div class="font-medium text-[#F8F6F0]">💾 Materialize in Browser</div>
                       <div class="text-sm text-[#F8F6F0]/70 mt-1">
-                        Download data into browser memory. Instant queries. Works offline. Can filter/sample.
+                        Download data into browser memory. Instant queries. Works offline. Can
+                        filter/sample.
                       </div>
                     </div>
                   </label>
@@ -350,7 +376,9 @@ This table is now available for queries across all tabs.`);
               {loadMode === "materialize" && (
                 <div class="space-y-4">
                   <div>
-                    <label class="block text-sm font-medium mb-2 text-[#F8F6F0]">Target Table Name</label>
+                    <label class="block text-sm font-medium mb-2 text-[#F8F6F0]">
+                      Target Table Name
+                    </label>
                     <input
                       type="text"
                       value={targetTableName}
@@ -366,7 +394,9 @@ This table is now available for queries across all tabs.`);
                   <div>
                     <label class="block text-sm font-medium mb-2 text-[#F8F6F0]">
                       Materialization Query
-                      <span class="ml-2 text-xs text-[#F8F6F0]/60">(Customize to filter, sample, or transform)</span>
+                      <span class="ml-2 text-xs text-[#F8F6F0]/60">
+                        (Customize to filter, sample, or transform)
+                      </span>
                     </label>
                     <textarea
                       value={materializeQuery}
@@ -378,19 +408,28 @@ This table is now available for queries across all tabs.`);
                     <div class="mt-2 space-y-1 text-xs text-[#F8F6F0]/60">
                       <p>💡 Examples:</p>
                       <button
-                        onClick={() => setMaterializeQuery(`SELECT * FROM ${loadDialogTable.database}.${loadDialogTable.schema}.${loadDialogTable.table} LIMIT 10000`)}
+                        onClick={() =>
+                          setMaterializeQuery(
+                            `SELECT * FROM ${loadDialogTable.database}.${loadDialogTable.schema}.${loadDialogTable.table} LIMIT 10000`,
+                          )}
                         class="block text-[#90C137] hover:text-[#A8D84E] hover:underline"
                       >
                         • Sample first 10K rows
                       </button>
                       <button
-                        onClick={() => setMaterializeQuery(`SELECT * FROM ${loadDialogTable.database}.${loadDialogTable.schema}.${loadDialogTable.table} WHERE session_date >= '2024-01-01'`)}
+                        onClick={() =>
+                          setMaterializeQuery(
+                            `SELECT * FROM ${loadDialogTable.database}.${loadDialogTable.schema}.${loadDialogTable.table} WHERE session_date >= '2024-01-01'`,
+                          )}
                         class="block text-[#90C137] hover:text-[#A8D84E] hover:underline"
                       >
                         • Filter recent data only
                       </button>
                       <button
-                        onClick={() => setMaterializeQuery(`SELECT * FROM ${loadDialogTable.database}.${loadDialogTable.schema}.${loadDialogTable.table} USING SAMPLE 10%`)}
+                        onClick={() =>
+                          setMaterializeQuery(
+                            `SELECT * FROM ${loadDialogTable.database}.${loadDialogTable.schema}.${loadDialogTable.table} USING SAMPLE 10%`,
+                          )}
                         class="block text-[#90C137] hover:text-[#A8D84E] hover:underline"
                       >
                         • Random 10% sample
@@ -414,7 +453,9 @@ This table is now available for queries across all tabs.`);
                   disabled={loadingData || (loadMode === "materialize" && !targetTableName.trim())}
                   class="px-4 py-2 bg-[#90C137] text-[#172217] rounded hover:bg-[#a0d147] disabled:bg-[#90C137]/30 font-medium transition-colors"
                 >
-                  {loadingData ? "Loading..." : (loadMode === "stream" ? "Continue with Streaming" : "Materialize")}
+                  {loadingData
+                    ? "Loading..."
+                    : (loadMode === "stream" ? "Continue with Streaming" : "Materialize")}
                 </button>
               </div>
             </div>
@@ -436,7 +477,9 @@ This table is now available for queries across all tabs.`);
             >
               <div class="flex flex-col items-center space-y-1">
                 <span>💾 Browser (WASM)</span>
-                <span class={`text-xs ${view === "wasm" ? "text-[#90C137]/80" : "text-[#F8F6F0]/50"}`}>
+                <span
+                  class={`text-xs ${view === "wasm" ? "text-[#90C137]/80" : "text-[#F8F6F0]/50"}`}
+                >
                   {wasmTables.length} materialized tables
                 </span>
               </div>
@@ -451,7 +494,11 @@ This table is now available for queries across all tabs.`);
             >
               <div class="flex flex-col items-center space-y-1">
                 <span>☁️ MotherDuck (Cloud)</span>
-                <span class={`text-xs ${view === "motherduck" ? "text-[#90C137]/80" : "text-[#F8F6F0]/50"}`}>
+                <span
+                  class={`text-xs ${
+                    view === "motherduck" ? "text-[#90C137]/80" : "text-[#F8F6F0]/50"
+                  }`}
+                >
                   {motherDuckTables.length} remote tables
                 </span>
               </div>
@@ -461,129 +508,148 @@ This table is now available for queries across all tabs.`);
       </div>
 
       {/* Tables List */}
-      {loading ? (
-        <div class="bg-[#172217]/60 backdrop-blur-sm rounded-lg shadow-xl border border-[#90C137]/20 p-8 text-center">
-          <p class="text-[#F8F6F0]/70">Loading catalog...</p>
-        </div>
-      ) : (
-        <div class="bg-[#172217]/60 backdrop-blur-sm rounded-lg shadow-xl border border-[#90C137]/20">
-          <div class="p-4 border-b border-[#90C137]/20">
-            <h3 class="font-semibold text-[#F8F6F0]">
-              {view === "wasm" ? "Materialized Tables" : "Remote MotherDuck Tables"}
-            </h3>
-            <p class="text-xs text-[#F8F6F0]/60 mt-1">Click table names to view columns</p>
+      {loading
+        ? (
+          <div class="bg-[#172217]/60 backdrop-blur-sm rounded-lg shadow-xl border border-[#90C137]/20 p-8 text-center">
+            <p class="text-[#F8F6F0]/70">Loading catalog...</p>
           </div>
-          <div class="max-h-[600px] overflow-y-auto">
-            {currentTables.length === 0 ? (
-              <div class="p-8 text-center text-[#F8F6F0]/60">
-                {view === "wasm" 
-                  ? "No tables materialized. Load tables from MotherDuck →" 
-                  : "No tables found"}
-              </div>
-            ) : (
-              currentTables.map((table) => {
-                const fullName = `${table.database}.${table.schema}.${table.table}`;
-                const isExpanded = expandedTable === fullName;
-                
-                return (
-                  <div key={fullName} class="border-b border-[#90C137]/10 last:border-b-0">
-                    {/* Table Header Row */}
-                    <div
-                      class="p-4 hover:bg-[#90C137]/5 transition-colors cursor-pointer"
-                      onClick={() => toggleTableExpansion(table.table, table.database, table.schema)}
-                    >
-                      <div class="flex items-start justify-between">
-                        <div class="flex items-start space-x-2 flex-1">
-                          {/* Expand/Collapse Icon */}
-                          <span class="text-[#90C137]/60 mt-0.5">
-                            {isExpanded ? "▼" : "▶"}
-                          </span>
-                          
-                          <div class="flex-1">
-                            <div class="font-medium text-[#90C137]">
-                              {table.database}.{table.schema}.{table.table}
-                            </div>
-                            {table.description && (
-                              <div class="text-sm text-[#F8F6F0]/90 mt-1 leading-relaxed">
-                                {table.description}
+        )
+        : (
+          <div class="bg-[#172217]/60 backdrop-blur-sm rounded-lg shadow-xl border border-[#90C137]/20">
+            <div class="p-4 border-b border-[#90C137]/20">
+              <h3 class="font-semibold text-[#F8F6F0]">
+                {view === "wasm" ? "Materialized Tables" : "Remote MotherDuck Tables"}
+              </h3>
+              <p class="text-xs text-[#F8F6F0]/60 mt-1">Click table names to view columns</p>
+            </div>
+            <div class="max-h-[600px] overflow-y-auto">
+              {currentTables.length === 0
+                ? (
+                  <div class="p-8 text-center text-[#F8F6F0]/60">
+                    {view === "wasm"
+                      ? "No tables materialized. Load tables from MotherDuck →"
+                      : "No tables found"}
+                  </div>
+                )
+                : (
+                  currentTables.map((table) => {
+                    const fullName = `${table.database}.${table.schema}.${table.table}`;
+                    const isExpanded = expandedTable === fullName;
+
+                    return (
+                      <div key={fullName} class="border-b border-[#90C137]/10 last:border-b-0">
+                        {/* Table Header Row */}
+                        <div
+                          class="p-4 hover:bg-[#90C137]/5 transition-colors cursor-pointer"
+                          onClick={() =>
+                            toggleTableExpansion(table.table, table.database, table.schema)}
+                        >
+                          <div class="flex items-start justify-between">
+                            <div class="flex items-start space-x-2 flex-1">
+                              {/* Expand/Collapse Icon */}
+                              <span class="text-[#90C137]/60 mt-0.5">
+                                {isExpanded ? "▼" : "▶"}
+                              </span>
+
+                              <div class="flex-1">
+                                <div class="font-medium text-[#90C137]">
+                                  {table.database}.{table.schema}.{table.table}
+                                </div>
+                                {table.description && (
+                                  <div class="text-sm text-[#F8F6F0]/90 mt-1 leading-relaxed">
+                                    {table.description}
+                                  </div>
+                                )}
+                                <div class="text-xs text-[#F8F6F0]/60 mt-1">
+                                  {table.row_count?.toLocaleString() || "0"} rows ·{" "}
+                                  {table.column_count} columns
+                                </div>
+                                {table.comment && (
+                                  <div class="text-xs text-[#F8F6F0]/70 mt-1 italic">
+                                    {table.comment}
+                                  </div>
+                                )}
                               </div>
-                            )}
-                            <div class="text-xs text-[#F8F6F0]/60 mt-1">
-                              {table.row_count?.toLocaleString() || "0"} rows · {table.column_count} columns
                             </div>
-                            {table.comment && (
-                              <div class="text-xs text-[#F8F6F0]/70 mt-1 italic">
-                                {table.comment}
-                              </div>
+
+                            {view === "motherduck" && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openLoadDialog(table);
+                                }}
+                                class="ml-2 px-3 py-1 text-xs bg-[#90C137] text-[#172217] rounded hover:bg-[#a0d147] whitespace-nowrap font-medium transition-colors"
+                              >
+                                Configure →
+                              </button>
                             )}
                           </div>
                         </div>
-                        
-                        {view === "motherduck" && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              openLoadDialog(table);
-                            }}
-                            class="ml-2 px-3 py-1 text-xs bg-[#90C137] text-[#172217] rounded hover:bg-[#a0d147] whitespace-nowrap font-medium transition-colors"
-                          >
-                            Configure →
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                    
-                    {/* Expanded Columns */}
-                    {isExpanded && (
-                      <div class="bg-[#172217]/40 border-t border-[#90C137]/10">
-                        {loadingColumns ? (
-                          <div class="p-4 text-center text-sm text-gray-500">
-                            Loading columns...
-                          </div>
-                        ) : (
-                          <div class="p-4">
-                            <div class="text-xs font-semibold text-[#90C137]/70 mb-2 uppercase tracking-wide">
-                              Columns ({expandedColumns.length})
-                            </div>
-                            <div class="space-y-2">
-                              {expandedColumns.map((col) => (
-                                <div key={col.column_name} class="flex items-start space-x-2 text-sm">
-                                  <div class="w-4 h-4 mt-0.5 flex-shrink-0">
-                                    <span class="text-[#90C137]/60">•</span>
+
+                        {/* Expanded Columns */}
+                        {isExpanded && (
+                          <div class="bg-[#172217]/40 border-t border-[#90C137]/10">
+                            {loadingColumns
+                              ? (
+                                <div class="p-4 text-center text-sm text-gray-500">
+                                  Loading columns...
+                                </div>
+                              )
+                              : (
+                                <div class="p-4">
+                                  <div class="text-xs font-semibold text-[#90C137]/70 mb-2 uppercase tracking-wide">
+                                    Columns ({expandedColumns.length})
                                   </div>
-                                  <div class="flex-1">
-                                    <span class="font-mono font-medium text-[#F8F6F0]">{col.column_name}</span>
-                                    <span class="text-[#F8F6F0]/60 ml-2">
-                                      {col.data_type}
-                                      {col.is_nullable && " · nullable"}
-                                    </span>
-                                    {col.column_default && (
-                                      <div class="text-xs text-[#F8F6F0]/50 ml-4 mt-0.5">
-                                        default: {col.column_default}
+                                  <div class="space-y-2">
+                                    {expandedColumns.map((col) => (
+                                      <div
+                                        key={col.column_name}
+                                        class="flex items-start space-x-2 text-sm"
+                                      >
+                                        <div class="w-4 h-4 mt-0.5 flex-shrink-0">
+                                          <span class="text-[#90C137]/60">•</span>
+                                        </div>
+                                        <div class="flex-1">
+                                          <span class="font-mono font-medium text-[#F8F6F0]">
+                                            {col.column_name}
+                                          </span>
+                                          <span class="text-[#F8F6F0]/60 ml-2">
+                                            {col.data_type}
+                                            {col.is_nullable && " · nullable"}
+                                          </span>
+                                          {col.column_default && (
+                                            <div class="text-xs text-[#F8F6F0]/50 ml-4 mt-0.5">
+                                              default: {col.column_default}
+                                            </div>
+                                          )}
+                                        </div>
                                       </div>
-                                    )}
+                                    ))}
                                   </div>
                                 </div>
-                              ))}
-                            </div>
+                              )}
                           </div>
                         )}
                       </div>
-                    )}
-                  </div>
-                );
-              })
-            )}
+                    );
+                  })
+                )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
       {/* Info Box */}
       <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <h4 class="font-semibold text-blue-900 mb-2">💡 Loading Options</h4>
         <ul class="text-sm text-blue-800 space-y-1">
-          <li>• <strong>Streaming:</strong> Query remote tables over network - always current, no storage</li>
-          <li>• <strong>Materialize:</strong> Download filtered data to browser - instant queries, offline access</li>
+          <li>
+            • <strong>Streaming:</strong>{" "}
+            Query remote tables over network - always current, no storage
+          </li>
+          <li>
+            • <strong>Materialize:</strong>{" "}
+            Download filtered data to browser - instant queries, offline access
+          </li>
           <li>• Use LIMIT, WHERE, SAMPLE to control data size when materializing</li>
           <li>• Materialized tables persist in the browser session only</li>
         </ul>

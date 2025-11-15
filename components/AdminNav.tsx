@@ -8,9 +8,9 @@ export default function AdminNav() {
             <div class="flex-shrink-0 flex items-center">
               <a href="/" class="flex items-center space-x-2">
                 <div class="w-8 h-8 rounded-full overflow-hidden border-2 border-[#90C137]">
-                  <img 
-                    src="/nerdy_alligator_headshot.png" 
-                    alt="DATA_GATA Logo" 
+                  <img
+                    src="/nerdy_alligator_headshot.png"
+                    alt="DATA_GATA Logo"
                     class="w-full h-full object-cover"
                   />
                 </div>
@@ -19,20 +19,20 @@ export default function AdminNav() {
                 </span>
               </a>
             </div>
-            
+
             <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
-              <a 
-                href="/admin/contacts" 
+              <a
+                href="/admin/contacts"
                 class="border-[#90C137] text-white inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
               >
                 Contact Submissions
               </a>
             </div>
           </div>
-          
+
           <div class="hidden sm:ml-6 sm:flex sm:items-center">
             {/* Replace the form with a direct link */}
-            <a 
+            <a
               href="/admin/oauth/signout"
               class="px-3 py-2 text-sm font-medium rounded-md text-[#172217] bg-[#90C137] hover:bg-[#7dab2a]"
             >

@@ -1,13 +1,13 @@
-// routes/_app.tsx
-import { PageProps } from "fresh";
-import { Head } from "fresh/runtime";
-// Ensure the correct path to the ScrollToTop.tsx file
-import ScrollToTop from "../islands/app_controls/ScrollToTop.tsx";
+import { App, staticFiles } from "fresh";
 
-export default function App({ Component }: PageProps) {
+if (Deno.env.get("BUILD_PHASE") !== "true") {
+  await import("$std/dotenv/load.ts");
+}
+
+function AppWrapper({ Component }: { Component: any }) {
   return (
-    <>
-      <Head>
+    <html lang="en">
+      <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>DATA_GATA | Modern Data Architecture</title>
@@ -26,11 +26,15 @@ export default function App({ Component }: PageProps) {
           rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
         />
-      </Head>
-      <div class="font-sans text-gray-900 bg-[#F8F6F0] min-h-screen flex flex-col">
+      </head>
+      <body class="font-sans text-gray-900 bg-[#F8F6F0] min-h-screen flex flex-col">
         <Component />
-        <ScrollToTop />
-      </div>
-    </>
+      </body>
+    </html>
   );
 }
+
+export const app = new App()
+  .use(staticFiles())
+  .appWrapper(AppWrapper)
+  .fsRoutes();

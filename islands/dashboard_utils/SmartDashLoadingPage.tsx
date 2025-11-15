@@ -1,8 +1,8 @@
-// islands/smarter_dashboard/LoadingPage.tsx
+// islands/dashboard_utils/SmartDashLoadingPage.tsx
 import { useEffect, useState } from "preact/hooks";
 
 export interface LoadingProgress {
-  step: 'duckdb' | 'webllm' | 'complete';
+  step: "duckdb" | "webllm" | "complete";
   progress: number;
   message: string;
 }
@@ -11,11 +11,11 @@ interface LoadingPageProps {
   onComplete: (db: any, webllmEngine: any) => void;
 }
 
-export default function LoadingPage({ onComplete }: LoadingPageProps) {
+export default function SmartDashLoadingPage({ onComplete }: LoadingPageProps) {
   const [loading, setLoading] = useState<LoadingProgress>({
-    step: 'duckdb',
+    step: "duckdb",
     progress: 0,
-    message: 'Initializing database...'
+    message: "Initializing database...",
   });
 
   useEffect(() => {
@@ -23,76 +23,79 @@ export default function LoadingPage({ onComplete }: LoadingPageProps) {
       try {
         // Step 1: Create DuckDB-WASM instance
         setLoading({
-          step: 'duckdb',
+          step: "duckdb",
           progress: 10,
-          message: 'Loading DuckDB WASM...'
+          message: "Loading DuckDB WASM...",
         });
 
         const { MDConnection } = await import("@motherduck/wasm-client");
-        
+
         setLoading({
-          step: 'duckdb',
+          step: "duckdb",
           progress: 30,
-          message: 'Connecting to MotherDuck...'
+          message: "Connecting to MotherDuck...",
         });
 
         // Get token
-        const tokenResponse = await fetch('/api/motherduck-token');
+        const tokenResponse = await fetch("/api/motherduck-token");
         const { token } = await tokenResponse.json();
-        
+
         // Create connection (initializes DuckDB-WASM + attaches MotherDuck)
         const mdConn = await MDConnection.create({ mdToken: token });
-        
+
         setLoading({
-          step: 'duckdb',
+          step: "duckdb",
           progress: 40,
-          message: 'Loading data locally...'
+          message: "Loading data locally...",
         });
 
         // Materialize tables locally for in-browser queries
-        await mdConn.evaluateQuery('USE my_db');
-        await mdConn.evaluateQuery('CREATE TABLE IF NOT EXISTS sessions_fct AS SELECT * FROM amplitude.sessions_fct');
-        await mdConn.evaluateQuery('CREATE TABLE IF NOT EXISTS users_fct AS SELECT * FROM amplitude.users_fct');
+        await mdConn.evaluateQuery("USE my_db");
+        await mdConn.evaluateQuery(
+          "CREATE TABLE IF NOT EXISTS sessions_fct AS SELECT * FROM amplitude.sessions_fct",
+        );
+        await mdConn.evaluateQuery(
+          "CREATE TABLE IF NOT EXISTS users_fct AS SELECT * FROM amplitude.users_fct",
+        );
 
         setLoading({
-          step: 'webllm',
+          step: "webllm",
           progress: 60,
-          message: 'Preparing WebLLM...'
+          message: "Preparing WebLLM...",
         });
 
         // Step 2: Initialize WebLLM
         const { CreateMLCEngine } = await import("@mlc-ai/web-llm");
-        
+
         const engine = await CreateMLCEngine(
           "Llama-3.2-3B-Instruct-q4f16_1-MLC",
           {
             initProgressCallback: (progress) => {
               const webllmProgress = 60 + (progress.progress || 0) * 35;
               setLoading({
-                step: 'webllm',
+                step: "webllm",
                 progress: webllmProgress,
-                message: progress.text || 'Loading language model...'
+                message: progress.text || "Loading language model...",
               });
-            }
-          }
+            },
+          },
         );
 
         setLoading({
-          step: 'complete',
+          step: "complete",
           progress: 100,
-          message: 'Setup complete! Loading dashboard...'
+          message: "Setup complete! Loading dashboard...",
         });
 
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise((resolve) => setTimeout(resolve, 500));
 
         onComplete(mdConn, engine);
-
       } catch (error) {
         console.error("Initialization failed:", error);
         setLoading({
-          step: 'duckdb',
+          step: "duckdb",
           progress: 0,
-          message: `Error: ${error.message}`
+          message: `Error: ${error.message}`,
         });
       }
     }
@@ -112,11 +115,22 @@ export default function LoadingPage({ onComplete }: LoadingPageProps) {
           <div class="flex justify-center mb-6">
             <div class="relative">
               <div class="w-20 h-20 border-4 border-blue-200 rounded-full"></div>
-              <div class="w-20 h-20 border-4 border-blue-600 rounded-full border-t-transparent animate-spin absolute top-0"></div>
-              {loading.step === 'complete' && (
+              <div class="w-20 h-20 border-4 border-blue-600 rounded-full border-t-transparent animate-spin absolute top-0">
+              </div>
+              {loading.step === "complete" && (
                 <div class="absolute inset-0 flex items-center justify-center">
-                  <svg class="w-10 h-10 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  <svg
+                    class="w-10 h-10 text-green-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M5 13l4 4L19 7"
+                    />
                   </svg>
                 </div>
               )}
@@ -128,9 +142,9 @@ export default function LoadingPage({ onComplete }: LoadingPageProps) {
               {loading.message}
             </p>
             <p class="text-sm text-gray-500">
-              {loading.step === 'duckdb' && 'Downloading data from cloud...'}
-              {loading.step === 'webllm' && 'Loading AI assistant...'}
-              {loading.step === 'complete' && 'Ready to go!'}
+              {loading.step === "duckdb" && "Downloading data from cloud..."}
+              {loading.step === "webllm" && "Loading AI assistant..."}
+              {loading.step === "complete" && "Ready to go!"}
             </p>
           </div>
 
@@ -140,7 +154,7 @@ export default function LoadingPage({ onComplete }: LoadingPageProps) {
               <span>{Math.round(loading.progress)}%</span>
             </div>
             <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-              <div 
+              <div
                 class="h-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full transition-all duration-500 ease-out"
                 style={{ width: `${loading.progress}%` }}
               />
@@ -148,16 +162,48 @@ export default function LoadingPage({ onComplete }: LoadingPageProps) {
           </div>
 
           <div class="flex justify-between text-xs mt-6">
-            <div class={`flex items-center ${loading.progress >= 10 ? 'text-blue-600' : 'text-gray-400'}`}>
-              <div class={`w-2 h-2 rounded-full mr-2 ${loading.progress >= 50 ? 'bg-green-500' : loading.progress >= 10 ? 'bg-blue-600' : 'bg-gray-300'}`} />
+            <div
+              class={`flex items-center ${
+                loading.progress >= 10 ? "text-blue-600" : "text-gray-400"
+              }`}
+            >
+              <div
+                class={`w-2 h-2 rounded-full mr-2 ${
+                  loading.progress >= 50
+                    ? "bg-green-500"
+                    : loading.progress >= 10
+                    ? "bg-blue-600"
+                    : "bg-gray-300"
+                }`}
+              />
               <span class="font-medium">Database</span>
             </div>
-            <div class={`flex items-center ${loading.progress >= 60 ? 'text-blue-600' : 'text-gray-400'}`}>
-              <div class={`w-2 h-2 rounded-full mr-2 ${loading.progress >= 95 ? 'bg-green-500' : loading.progress >= 60 ? 'bg-blue-600' : 'bg-gray-300'}`} />
+            <div
+              class={`flex items-center ${
+                loading.progress >= 60 ? "text-blue-600" : "text-gray-400"
+              }`}
+            >
+              <div
+                class={`w-2 h-2 rounded-full mr-2 ${
+                  loading.progress >= 95
+                    ? "bg-green-500"
+                    : loading.progress >= 60
+                    ? "bg-blue-600"
+                    : "bg-gray-300"
+                }`}
+              />
               <span class="font-medium">AI Assistant</span>
             </div>
-            <div class={`flex items-center ${loading.progress >= 100 ? 'text-green-600' : 'text-gray-400'}`}>
-              <div class={`w-2 h-2 rounded-full mr-2 ${loading.progress >= 100 ? 'bg-green-500' : 'bg-gray-300'}`} />
+            <div
+              class={`flex items-center ${
+                loading.progress >= 100 ? "text-green-600" : "text-gray-400"
+              }`}
+            >
+              <div
+                class={`w-2 h-2 rounded-full mr-2 ${
+                  loading.progress >= 100 ? "bg-green-500" : "bg-gray-300"
+                }`}
+              />
               <span class="font-medium">Complete</span>
             </div>
           </div>

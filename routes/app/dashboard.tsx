@@ -1,23 +1,21 @@
 // routes/app/dashboard.tsx
-import { PageProps, Handlers } from "$fresh/server.ts";
-import DashboardRouter from "../../islands/DashboardRouter.tsx";
+import { PageProps, type Context } from "fresh";
+import DashboardRouter from "../../islands/dashboard_utils/DashboardRouter.tsx";
 
 interface DashboardData {
   motherDuckToken: string;
   sessionId: string;
 }
 
-export const handler: Handlers<DashboardData> = {
-  async GET(req, ctx) {
-    const motherDuckToken = Deno.env.get("MOTHERDUCK_TOKEN") || "";
-    const sessionId = ctx.state.sessionId;
-    
-    return ctx.render({ 
-      motherDuckToken,
-      sessionId 
-    });
-  }
-};
+export async function handler(ctx: Context) {
+  const motherDuckToken = Deno.env.get("MOTHERDUCK_TOKEN") || "";
+  const sessionId = ctx.state.sessionId || "";
+
+  return ctx.render({
+    motherDuckToken,
+    sessionId,
+  });
+}
 
 export default function DashboardPage({ data }: PageProps<DashboardData>) {
   const { motherDuckToken, sessionId } = data;
@@ -38,7 +36,7 @@ export default function DashboardPage({ data }: PageProps<DashboardData>) {
   }
 
   return (
-    <DashboardRouter 
+    <DashboardRouter
       motherDuckToken={motherDuckToken}
       sessionId={sessionId}
     />

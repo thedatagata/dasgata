@@ -1,29 +1,36 @@
 // utils/query-engine.ts
 /**
  * Modular Query Engine
- * 
+ *
  * This service provides a unified interface for query generation and execution.
  * It's designed to be easily wrapped with feature flags later.
- * 
+ *
  * Architecture:
  * - Provider interface allows swapping between WebLLM, MotherDuck AI, etc.
  * - Execution strategy allows switching between in-memory and cloud
  * - All decisions are externalized to config, making feature flag integration simple
  */
 
-import type { TableMetadata } from "../services/webllm.ts";
-import { webLLMEngine } from "../services/webllm.ts";
+// TODO: Replace with actual types once webllm service is restored
+// import type { TableMetadata } from "../services/webllm.ts";
+// import { webLLMEngine } from "../services/webllm.ts";
 import type { MotherDuckClient } from "../services/motherduck-client.ts";
+
+// Temporary type definition until webllm service is restored
+export interface TableMetadata {
+  name: string;
+  columns: Array<{ name: string; type: string; description?: string }>;
+}
 
 /**
  * Query generation providers
  */
-export type QueryProvider = 'webllm' | 'motherduck-ai';
+export type QueryProvider = "webllm" | "motherduck-ai";
 
 /**
  * Query execution targets
  */
-export type QueryTarget = 'memory' | 'motherduck';
+export type QueryTarget = "memory" | "motherduck";
 
 /**
  * Query generation result
@@ -71,7 +78,7 @@ export interface QueryEngineConfig {
 
 /**
  * Modular Query Engine
- * 
+ *
  * Design principles:
  * 1. All providers implement the same interface
  * 2. Execution strategy is determined by target selection
@@ -86,7 +93,7 @@ export class QueryEngine {
   constructor(
     config: QueryEngineConfig,
     duckdbClient: any,
-    motherDuckClient: MotherDuckClient | null = null
+    motherDuckClient: MotherDuckClient | null = null,
   ) {
     this.config = config;
     this.duckdbClient = duckdbClient;
@@ -102,28 +109,28 @@ export class QueryEngine {
 
   /**
    * Generate SQL from natural language
-   * 
+   *
    * This method encapsulates provider selection logic, making it easy
    * to add feature flag checks here later
    */
   async generateSQL(
     naturalLanguageQuery: string,
     tableName: string,
-    metadata: TableMetadata | null
+    metadata: TableMetadata | null,
   ): Promise<GeneratedQuery> {
     const startTime = Date.now();
-    
+
     try {
       // Try preferred provider first
-      if (this.config.preferredProvider === 'webllm' && this.config.enableWebLLM) {
+      if (this.config.preferredProvider === "webllm" && this.config.enableWebLLM) {
         return await this._generateWithWebLLM(naturalLanguageQuery, metadata);
       } else {
         return await this._generateWithMotherDuckAI(naturalLanguageQuery, tableName, metadata);
       }
     } catch (error) {
       // Fallback logic
-      if (this.config.fallbackToMotherDuck && this.config.preferredProvider === 'webllm') {
-        console.warn('WebLLM failed, falling back to MotherDuck AI:', error);
+      if (this.config.fallbackToMotherDuck && this.config.preferredProvider === "webllm") {
+        console.warn("WebLLM failed, falling back to MotherDuck AI:", error);
         return await this._generateWithMotherDuckAI(naturalLanguageQuery, tableName, metadata);
       }
       throw error;
@@ -132,21 +139,21 @@ export class QueryEngine {
 
   /**
    * Execute generated SQL
-   * 
+   *
    * Target selection logic is centralized here, making it easy to add
    * feature flag checks later
    */
   async executeSQL(
     sql: string,
-    tableName: string
+    tableName: string,
   ): Promise<ExecutionResult> {
     const startTime = Date.now();
-    
+
     // Determine target based on configuration
     const target = this._selectExecutionTarget(tableName);
-    
+
     try {
-      if (target === 'memory') {
+      if (target === "memory") {
         return await this._executeInMemory(sql, startTime);
       } else {
         return await this._executeInMotherDuck(sql, startTime);
@@ -163,50 +170,56 @@ export class QueryEngine {
   async query(
     naturalLanguageQuery: string,
     tableName: string,
-    metadata: TableMetadata | null
+    metadata: TableMetadata | null,
   ): Promise<QueryResult> {
     // Generate SQL
     const generated = await this.generateSQL(naturalLanguageQuery, tableName, metadata);
-    
+
     // Execute SQL
     const executed = await this.executeSQL(generated.sql, tableName);
-    
+
     return {
       generated,
       executed,
       naturalLanguageQuery,
-      tableName
+      tableName,
     };
   }
 
   /**
    * Private: Generate SQL using WebLLM
+   * TODO: Re-enable once webllm service is restored
    */
   private async _generateWithWebLLM(
     naturalLanguageQuery: string,
-    metadata: TableMetadata | null
+    metadata: TableMetadata | null,
   ): Promise<GeneratedQuery> {
-    if (!metadata) {
-      throw new Error('Metadata required for WebLLM');
-    }
+    // TODO: Restore webLLMEngine once service file is available
+    throw new Error(
+      "WebLLM service is currently unavailable. Please restore ../services/webllm.ts",
+    );
 
-    const response = await webLLMEngine.generateSQL(naturalLanguageQuery, [metadata]);
-    
-    // Extract SQL from markdown code block
-    const sqlMatch = response.match(/```sql\n([\s\S]+?)\n```/);
-    if (!sqlMatch) {
-      throw new Error('WebLLM did not return valid SQL');
-    }
+    // if (!metadata) {
+    //   throw new Error('Metadata required for WebLLM');
+    // }
 
-    // Extract explanation
-    const explanation = response.split('```')[2]?.trim() || undefined;
+    // const response = await webLLMEngine.generateSQL(naturalLanguageQuery, [metadata]);
 
-    return {
-      sql: sqlMatch[1].trim(),
-      provider: 'webllm',
-      explanation,
-      timestamp: Date.now()
-    };
+    // // Extract SQL from markdown code block
+    // const sqlMatch = response.match(/```sql\n([\s\S]+?)\n```/);
+    // if (!sqlMatch) {
+    //   throw new Error('WebLLM did not return valid SQL');
+    // }
+
+    // // Extract explanation
+    // const explanation = response.split('```')[2]?.trim() || undefined;
+
+    // return {
+    //   sql: sqlMatch[1].trim(),
+    //   provider: 'webllm',
+    //   explanation,
+    //   timestamp: Date.now()
+    // };
   }
 
   /**
@@ -215,35 +228,38 @@ export class QueryEngine {
   private async _generateWithMotherDuckAI(
     naturalLanguageQuery: string,
     tableName: string,
-    metadata: TableMetadata | null
+    metadata: TableMetadata | null,
   ): Promise<GeneratedQuery> {
     if (!this.motherDuckClient) {
-      throw new Error('MotherDuck client not configured');
+      throw new Error("MotherDuck client not configured");
     }
 
     // Build context-aware prompt
     let contextPrompt = naturalLanguageQuery;
     if (metadata && this.config.enableMetadataEnrichment) {
       const columnList = metadata.columns
-        .map(c => `${c.name} (${c.type})${c.description ? `: ${c.description}` : ''}`)
-        .join(', ');
-      contextPrompt = `Given table ${tableName} with columns: ${columnList}\n\nQuery: ${naturalLanguageQuery}`;
+        .map((c) => `${c.name} (${c.type})${c.description ? `: ${c.description}` : ""}`)
+        .join(", ");
+      contextPrompt =
+        `Given table ${tableName} with columns: ${columnList}\n\nQuery: ${naturalLanguageQuery}`;
     }
 
     // Use MotherDuck's prompt_sql function
-    const generateQuery = `CALL prompt_sql('${contextPrompt.replace(/'/g, "''")}', include_tables=['${tableName}']);`;
-    
+    const generateQuery = `CALL prompt_sql('${
+      contextPrompt.replace(/'/g, "''")
+    }', include_tables=['${tableName}']);`;
+
     const sqlResult = await this.motherDuckClient.evaluateQuery(generateQuery);
     const sqlRows = sqlResult.data.toRows();
-    
+
     if (!sqlRows[0]?.query) {
-      throw new Error('MotherDuck AI did not generate SQL');
+      throw new Error("MotherDuck AI did not generate SQL");
     }
 
     return {
       sql: sqlRows[0].query,
-      provider: 'motherduck-ai',
-      timestamp: Date.now()
+      provider: "motherduck-ai",
+      timestamp: Date.now(),
     };
   }
 
@@ -253,10 +269,10 @@ export class QueryEngine {
   private _selectExecutionTarget(tableName: string): QueryTarget {
     // This is where we'd check if table is materialized
     // For now, use config preference
-    if (this.config.preferredTarget === 'memory' && this.config.enableMaterialization) {
-      return 'memory';
+    if (this.config.preferredTarget === "memory" && this.config.enableMaterialization) {
+      return "memory";
     }
-    return 'motherduck';
+    return "motherduck";
   }
 
   /**
@@ -265,12 +281,12 @@ export class QueryEngine {
   private async _executeInMemory(sql: string, startTime: number): Promise<ExecutionResult> {
     const result = await this.duckdbClient.evaluateQuery(sql);
     const rows = result.data.toRows();
-    
+
     return {
       data: rows,
       executionTimeMs: Date.now() - startTime,
-      target: 'memory',
-      rowCount: rows.length
+      target: "memory",
+      rowCount: rows.length,
     };
   }
 
@@ -279,17 +295,17 @@ export class QueryEngine {
    */
   private async _executeInMotherDuck(sql: string, startTime: number): Promise<ExecutionResult> {
     if (!this.motherDuckClient) {
-      throw new Error('MotherDuck client not configured');
+      throw new Error("MotherDuck client not configured");
     }
 
     const result = await this.motherDuckClient.evaluateQuery(sql);
     const rows = result.data.toRows();
-    
+
     return {
       data: rows,
       executionTimeMs: Date.now() - startTime,
-      target: 'motherduck',
-      rowCount: rows.length
+      target: "motherduck",
+      rowCount: rows.length,
     };
   }
 }
@@ -300,11 +316,11 @@ export class QueryEngine {
  */
 export function createDefaultConfig(): QueryEngineConfig {
   return {
-    preferredProvider: 'webllm',
-    preferredTarget: 'memory',
+    preferredProvider: "webllm",
+    preferredTarget: "memory",
     enableWebLLM: true,
     enableMaterialization: true,
     enableMetadataEnrichment: true,
-    fallbackToMotherDuck: true
+    fallbackToMotherDuck: true,
   };
 }

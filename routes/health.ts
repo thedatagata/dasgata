@@ -1,18 +1,16 @@
-// routes/health.ts
-import { Handlers } from "$fresh/server.ts";
+import type { Context } from "fresh";
 
-export const handler: Handlers = {
-  GET(_req) {
-    return new Response(
-      JSON.stringify({
-        status: "healthy",
-        timestamp: new Date().toISOString(),
-        service: "thedenogatar"
-      }),
-      {
-        status: 200,
-        headers: { "Content-Type": "application/json" }
-      }
-    );
-  }
-};
+// routes/health.ts
+export function handler(ctx: Context) {
+  return new Response(
+    JSON.stringify({
+      status: "healthy",
+      timestamp: new Date().toISOString(),
+      service: "thedenogatar",
+    }),
+    {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    },
+  );
+}

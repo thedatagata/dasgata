@@ -5,7 +5,7 @@ let inMemoryStore = new Map();
 export async function initDatabase() {
   try {
     if (kv) return; // Already initialized
-    
+
     try {
       // Use hardcoded path in the db directory
       kv = await Deno.openKv("./db/data.kv");
@@ -23,7 +23,7 @@ export async function initDatabase() {
 
 export function getKv() {
   if (kv) return kv;
-  
+
   // Return a mock KV implementation using in-memory Map
   return {
     get: async (key) => {
@@ -47,6 +47,6 @@ export function getKv() {
           yield { key, value, versionstamp: null };
         }
       }
-    }
+    },
   } as unknown as Deno.Kv;
 }

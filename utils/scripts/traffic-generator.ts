@@ -1,5 +1,23 @@
 // utils/traffic-generator.ts
-import { buildMultiContext, type MultiContextData } from "./launchdarkly.ts";
+// TODO: Restore launchdarkly.ts to re-enable multi-context feature
+// import { buildMultiContext, type MultiContextData } from "./launchdarkly.ts";
+
+// Temporary type definition until launchdarkly.ts is restored
+interface MultiContextData {
+  user: {
+    key: string;
+    email: string;
+    tier: string;
+    role: string;
+    sessionStart: string;
+  };
+  session: {
+    key: string;
+    queryComplexity: string;
+    deviceType: string;
+    region: string;
+  };
+}
 
 // Sample queries for NYC taxi dataset
 const SAMPLE_QUERIES = [
@@ -12,7 +30,7 @@ const SAMPLE_QUERIES = [
   "What's the correlation between distance and fare?",
   "Show me payment type distribution",
   "Find longest taxi trips by duration",
-  "What's the average speed during rush hour?"
+  "What's the average speed during rush hour?",
 ];
 
 const TIERS = ["trial", "starter", "premium"] as const;
@@ -21,31 +39,32 @@ const DEVICES = ["desktop", "mobile", "tablet"] as const;
 const COMPLEXITIES = ["simple", "medium", "advanced"] as const;
 
 // Generate random context
+// TODO: Restore when LaunchDarkly is re-enabled
 function generateRandomContext(): MultiContextData {
   const userId = `user-${Math.random().toString(36).substring(7)}@example.com`;
   const tier = TIERS[Math.floor(Math.random() * TIERS.length)];
-  
+
   return {
     user: {
       key: userId,
       email: userId,
       tier,
       role: ROLES[Math.floor(Math.random() * ROLES.length)],
-      sessionStart: new Date().toISOString()
+      sessionStart: new Date().toISOString(),
     },
     session: {
       key: crypto.randomUUID(),
       queryComplexity: COMPLEXITIES[Math.floor(Math.random() * COMPLEXITIES.length)],
       deviceType: DEVICES[Math.floor(Math.random() * DEVICES.length)],
-      region: "US-EAST"
-    }
+      region: "US-EAST",
+    },
   };
 }
 
 // Generate traffic
 export async function generateTraffic(
   numQueries: number,
-  delayMs: number = 100
+  delayMs: number = 100,
 ): Promise<{
   total: number;
   successful: number;
@@ -67,7 +86,8 @@ export async function generateTraffic(
 
   for (let i = 0; i < numQueries; i++) {
     const contextData = generateRandomContext();
-    const ldContext = buildMultiContext(contextData);
+    // TODO: Restore LaunchDarkly integration
+    // const ldContext = buildMultiContext(contextData);
     const query = SAMPLE_QUERIES[Math.floor(Math.random() * SAMPLE_QUERIES.length)];
 
     try {
@@ -76,8 +96,9 @@ export async function generateTraffic(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           query,
-          context: ldContext
-        })
+          // TODO: Re-enable context once LaunchDarkly is restored
+          // context: ldContext
+        }),
       });
 
       const data = await response.json();
@@ -88,7 +109,7 @@ export async function generateTraffic(
         latency: data.latency,
         cost: data.cost,
         tier: contextData.user.tier,
-        success: response.ok
+        success: response.ok,
       });
 
       if (response.ok) {
@@ -101,7 +122,6 @@ export async function generateTraffic(
       if ((i + 1) % 10 === 0) {
         console.log(`  Progress: ${i + 1}/${numQueries} queries sent`);
       }
-
     } catch (error) {
       console.error(`Query ${i + 1} failed:`, error);
       failed++;
@@ -110,13 +130,13 @@ export async function generateTraffic(
         provider: "unknown",
         latency: 0,
         tier: contextData.user.tier,
-        success: false
+        success: false,
       });
     }
 
     // Rate limiting delay
     if (delayMs > 0 && i < numQueries - 1) {
-      await new Promise(resolve => setTimeout(resolve, delayMs));
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
     }
   }
 
@@ -126,40 +146,48 @@ export async function generateTraffic(
     total: numQueries,
     successful,
     failed,
-    results
+    results,
   };
 }
 
 // Analyze results
-export function analyzeResults(results: Array<{
-  provider: string;
-  latency: number;
-  cost?: number;
-  tier: string;
-  success: boolean;
-}>) {
-  const byProvider = results.reduce((acc, r) => {
-    if (!acc[r.provider]) {
-      acc[r.provider] = {
-        count: 0,
-        totalLatency: 0,
-        totalCost: 0,
-        successful: 0
-      };
-    }
-    acc[r.provider].count++;
-    acc[r.provider].totalLatency += r.latency;
-    acc[r.provider].totalCost += r.cost || 0;
-    if (r.success) acc[r.provider].successful++;
-    return acc;
-  }, {} as Record<string, { count: number; totalLatency: number; totalCost: number; successful: number }>);
+export function analyzeResults(
+  results: Array<{
+    provider: string;
+    latency: number;
+    cost?: number;
+    tier: string;
+    success: boolean;
+  }>,
+) {
+  const byProvider = results.reduce(
+    (acc, r) => {
+      if (!acc[r.provider]) {
+        acc[r.provider] = {
+          count: 0,
+          totalLatency: 0,
+          totalCost: 0,
+          successful: 0,
+        };
+      }
+      acc[r.provider].count++;
+      acc[r.provider].totalLatency += r.latency;
+      acc[r.provider].totalCost += r.cost || 0;
+      if (r.success) acc[r.provider].successful++;
+      return acc;
+    },
+    {} as Record<
+      string,
+      { count: number; totalLatency: number; totalCost: number; successful: number }
+    >,
+  );
 
   const analysis = Object.entries(byProvider).map(([provider, stats]) => ({
     provider,
     queries: stats.count,
     avgLatency: Math.round(stats.totalLatency / stats.count),
     totalCost: stats.totalCost.toFixed(4),
-    successRate: ((stats.successful / stats.count) * 100).toFixed(1) + "%"
+    successRate: ((stats.successful / stats.count) * 100).toFixed(1) + "%",
   }));
 
   return analysis;
