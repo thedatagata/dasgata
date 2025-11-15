@@ -6,9 +6,9 @@ export default function Nav() {
           {/* Logo */}
           <a href="/" class="flex items-center space-x-2">
             <div class="w-10 h-10 rounded-full overflow-hidden border-2 border-[#90C137]">
-              <img 
-                src="/nerdy_alligator_headshot.png" 
-                alt="DATA_GATA Logo" 
+              <img
+                src="/nerdy_alligator_headshot.png"
+                alt="DATA_GATA Logo"
                 class="w-full h-full object-cover"
               />
             </div>
@@ -19,8 +19,8 @@ export default function Nav() {
 
           {/* Navigation - Desktop */}
           <div class="hidden md:flex items-center space-x-8">
-            <a 
-              href="/auth/signin" 
+            <a
+              href="/auth/signin"
               class="bg-[#90C137] text-[#172217] px-4 py-2 rounded-md text-sm font-medium hover:bg-[#90C137]/90 transition-colors"
             >
               Sign In
@@ -29,8 +29,8 @@ export default function Nav() {
 
           {/* Mobile Menu */}
           <div class="md:hidden">
-            <a 
-              href="/auth/signin" 
+            <a
+              href="/auth/signin"
               class="bg-[#90C137] text-[#172217] px-4 py-2 rounded-md text-sm font-medium hover:bg-[#90C137]/90 transition-colors"
             >
               Sign In

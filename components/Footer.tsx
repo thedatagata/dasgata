@@ -1,7 +1,7 @@
 // components/Footer.tsx
 export default function Footer() {
   const year = new Date().getFullYear();
-  
+
   return (
     <footer class="bg-[#172217] text-[#F8F6F0]/80">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -17,20 +17,21 @@ export default function Footer() {
               </h3>
             </div>
             <p class="text-sm max-w-xs">
-              Modern data architecture and analytics engineering consulting. We help organizations build scalable, reliable, and efficient data platforms.
+              Modern data architecture and analytics engineering consulting. We help organizations
+              build scalable, reliable, and efficient data platforms.
             </p>
             <div class="flex space-x-4">
-              <a 
-                href="https://github.com/thedatagata" 
-                target="_blank" 
+              <a
+                href="https://github.com/thedatagata"
+                target="_blank"
                 rel="noopener noreferrer"
                 class="text-[#F8F6F0]/80 hover:text-[#90C137] transition-colors"
               >
                 <i class="fab fa-github text-xl"></i>
               </a>
-              <a 
-                href="https://www.linkedin.com/company/datagata" 
-                target="_blank" 
+              <a
+                href="https://www.linkedin.com/company/datagata"
+                target="_blank"
                 rel="noopener noreferrer"
                 class="text-[#F8F6F0]/80 hover:text-[#90C137] transition-colors"
               >
@@ -38,7 +39,7 @@ export default function Footer() {
               </a>
             </div>
           </div>
-          
+
           {/* Quick Links */}
           <div>
             <h3 class="font-semibold mb-4 text-[#90C137]">
@@ -46,40 +47,40 @@ export default function Footer() {
             </h3>
             <ul class="space-y-2 text-sm">
               <li>
-                <a 
-                  href="#about" 
+                <a
+                  href="#about"
                   class="text-[#F8F6F0]/80 hover:text-[#90C137] transition-colors"
                 >
                   About Us
                 </a>
               </li>
               <li>
-                <a 
-                  href="#solutions" 
+                <a
+                  href="#solutions"
                   class="text-[#F8F6F0]/80 hover:text-[#90C137] transition-colors"
                 >
                   Solutions
                 </a>
               </li>
               <li>
-                <a 
-                  href="#expertise" 
+                <a
+                  href="#expertise"
                   class="text-[#F8F6F0]/80 hover:text-[#90C137] transition-colors"
                 >
                   Expertise
                 </a>
               </li>
               <li>
-                <a 
-                  href="#technologies" 
+                <a
+                  href="#technologies"
                   class="text-[#F8F6F0]/80 hover:text-[#90C137] transition-colors"
                 >
                   Technologies
                 </a>
               </li>
               <li>
-                <a 
-                  href="#contact" 
+                <a
+                  href="#contact"
                   class="text-[#F8F6F0]/80 hover:text-[#90C137] transition-colors"
                 >
                   Contact
@@ -87,7 +88,7 @@ export default function Footer() {
               </li>
             </ul>
           </div>
-          
+
           {/* Contact */}
           <div>
             <h3 class="font-semibold mb-4 text-[#90C137]">
@@ -103,8 +104,8 @@ export default function Footer() {
                 <span>Durham, NC, USA</span>
               </li>
               <li class="mt-4">
-                <a 
-                  href="#contact" 
+                <a
+                  href="#contact"
                   class="inline-block px-4 py-2 border border-[#F8F6F0]/20 text-[#F8F6F0] rounded-md hover:border-[#90C137]/50 hover:bg-[#90C137]/10 transition-colors"
                 >
                   Schedule a consultation
@@ -113,7 +114,7 @@ export default function Footer() {
             </ul>
           </div>
         </div>
-        
+
         <div class="mt-8 pt-8 border-t border-[#F8F6F0]/20 text-center text-sm">
           © {year} DATA_GATA LLC. All rights reserved.
         </div>

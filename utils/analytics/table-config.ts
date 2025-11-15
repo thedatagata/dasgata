@@ -2,12 +2,12 @@
 
 export interface TableConfig {
   fullName: string;
-  mode: 'stream' | 'materialize';
+  mode: "stream" | "materialize";
   configuredAt: string;
-  source: 'browser' | 'motherduck';
+  source: "browser" | "motherduck";
 }
 
-const CONFIG_KEY = 'configured_tables';
+const CONFIG_KEY = "configured_tables";
 
 export class TableConfigManager {
   /**
@@ -18,7 +18,7 @@ export class TableConfigManager {
       const stored = localStorage.getItem(CONFIG_KEY);
       return stored ? JSON.parse(stored) : [];
     } catch (error) {
-      console.error('Failed to load table configuration:', error);
+      console.error("Failed to load table configuration:", error);
       return [];
     }
   }
@@ -28,17 +28,17 @@ export class TableConfigManager {
    */
   static configureTable(
     fullName: string,
-    mode: 'stream' | 'materialize',
-    source: 'browser' | 'motherduck'
+    mode: "stream" | "materialize",
+    source: "browser" | "motherduck",
   ): void {
     const configs = this.getConfiguredTables();
-    const existing = configs.findIndex(c => c.fullName === fullName);
+    const existing = configs.findIndex((c) => c.fullName === fullName);
 
     const config: TableConfig = {
       fullName,
       mode,
       source,
-      configuredAt: new Date().toISOString()
+      configuredAt: new Date().toISOString(),
     };
 
     if (existing >= 0) {
@@ -56,7 +56,7 @@ export class TableConfigManager {
    */
   static unconfigureTable(fullName: string): void {
     const configs = this.getConfiguredTables();
-    const filtered = configs.filter(c => c.fullName !== fullName);
+    const filtered = configs.filter((c) => c.fullName !== fullName);
     localStorage.setItem(CONFIG_KEY, JSON.stringify(filtered));
     console.log(`❌ Removed configuration: ${fullName}`);
   }
@@ -65,28 +65,28 @@ export class TableConfigManager {
    * Check if a table is configured
    */
   static isConfigured(fullName: string): boolean {
-    return this.getConfiguredTables().some(c => c.fullName === fullName);
+    return this.getConfiguredTables().some((c) => c.fullName === fullName);
   }
 
   /**
    * Get configuration for a specific table
    */
   static getTableConfig(fullName: string): TableConfig | null {
-    return this.getConfiguredTables().find(c => c.fullName === fullName) || null;
+    return this.getConfiguredTables().find((c) => c.fullName === fullName) || null;
   }
 
   /**
    * Get only materialized tables (in browser memory)
    */
   static getMaterializedTables(): TableConfig[] {
-    return this.getConfiguredTables().filter(c => c.mode === 'materialize');
+    return this.getConfiguredTables().filter((c) => c.mode === "materialize");
   }
 
   /**
    * Get only streaming tables (remote)
    */
   static getStreamingTables(): TableConfig[] {
-    return this.getConfiguredTables().filter(c => c.mode === 'stream');
+    return this.getConfiguredTables().filter((c) => c.mode === "stream");
   }
 
   /**
@@ -94,6 +94,6 @@ export class TableConfigManager {
    */
   static clearAll(): void {
     localStorage.removeItem(CONFIG_KEY);
-    console.log('🗑️ Cleared all table configurations');
+    console.log("🗑️ Cleared all table configurations");
   }
 }

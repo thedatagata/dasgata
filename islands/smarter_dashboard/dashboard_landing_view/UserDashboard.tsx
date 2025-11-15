@@ -1,81 +1,175 @@
-// islands/UsersDashboard.tsx
+// islands/tabs/UsersTab.tsx
 import { useEffect, useState } from "preact/hooks";
-import KPICard from "../../components/KPICard.tsx";
-import PlotlyChart from "../../components/PlotlyChart.tsx";
-import { createSemanticTables } from "../../utils/semantic/semantic-amplitude.ts";
-import { usersDashboardQueries } from "../../utils/semantic/dashboard-queries.ts";
-import { generatePlotlyConfig } from "../../utils/semantic/plotly-generator.ts";
+import KPICard from "../../../components/charts/KPICard.tsx";
+import RechartsWrapper from "../../../components/charts/RechartsWrapper.tsx";
+import { createSemanticTables } from "../../../utils/semantic/semantic-amplitude.ts";
+import { generateRechartsConfig } from "../../../utils/semantic/recharts-generator.ts";
+import { getSemanticConfig } from "../../../utils/semantic/semantic_config.ts";
 
-export default function UsersDashboard({ db }) {
+interface UsersTabProps {
+  db: any;
+}
+
+export default function UsersTab({ db }: UsersTabProps) {
   const [loading, setLoading] = useState(true);
   const [kpiData, setKpiData] = useState<any>({});
-  const [chartData, setChartData] = useState<any>({});
+  const [charts, setCharts] = useState<any>({});
 
   useEffect(() => {
-    async function loadDashboard() {
+    async function loadData() {
       setLoading(true);
       const tables = createSemanticTables(db);
+      const semanticConfig = getSemanticConfig();
 
       try {
-        // Load all queries
-        const results: any = {};
-        
-        for (const query of usersDashboardQueries) {
-          const table = tables[query.table];
-          const data = await table.query({
-            dimensions: query.dimensions,
-            measures: query.measures,
-            filters: query.filters
-          });
-          
-          results[query.id] = {
-            query,
-            data
-          };
-        }
+        // KPIs
+        const totalLTV = await tables.users.query({
+          measures: ["total_ltv"],
+        });
 
-        // Separate KPIs from charts
-        const kpis: any = {};
-        const charts: any = {};
-        
-        for (const [id, result] of Object.entries(results)) {
-          const { query, data } = result as any;
-          
-          if (query.chartType === 'kpi') {
-            kpis[id] = { query, data };
-          } else {
-            const plotlyConfig = generatePlotlyConfig(query, data);
-            charts[id] = { query, ...plotlyConfig };
-          }
-        }
-        
-        setKpiData(kpis);
-        setChartData(charts);
+        const payingCustomers = await tables.users.query({
+          measures: ["paying_customers"],
+        });
+
+        const avgLTV = await tables.users.query({
+          measures: ["avg_ltv"],
+        });
+
+        const retentionRate = await tables.users.query({
+          measures: ["retention_rate_30d"],
+        });
+
+        setKpiData({
+          totalLTV: totalLTV[0]?.total_ltv || 0,
+          payingCustomers: payingCustomers[0]?.paying_customers || 0,
+          avgLTV: avgLTV[0]?.avg_ltv || 0,
+          retentionRate: retentionRate[0]?.retention_rate_30d || 0,
+        });
+
+        // Chart 1: RFM Analysis (Recency, Frequency, Monetary)
+        // Using total_sessions (Frequency) and total_revenue (Monetary)
+        const rfmQuery = {
+          table: "users" as const,
+          dimensions: ["current_plan_tier"],
+          measures: ["user_count", "avg_sessions_per_user", "avg_ltv"],
+          filters: ["current_plan_tier != ''", "is_paying_customer = TRUE"],
+          explanation: "RFM segmentation by plan tier",
+        };
+
+        const rfmData = await tables.users.query({
+          dimensions: rfmQuery.dimensions,
+          measures: rfmQuery.measures,
+          filters: rfmQuery.filters,
+        });
+
+        const rfmConfig = generateRechartsConfig(rfmQuery, rfmData, semanticConfig);
+        rfmConfig.title = "RFM Analysis by Plan Tier";
+        rfmConfig.type = "bar";
+
+        // Chart 2: Cohort Analysis (Users by First Event Date)
+        const cohortQuery = {
+          table: "users" as const,
+          dimensions: ["first_event_date"],
+          measures: ["user_count", "retention_rate_30d"],
+          filters: ["first_event_date >= CURRENT_DATE - INTERVAL '180 days'"],
+          explanation: "User cohorts and their 30-day retention",
+        };
+
+        const cohortData = await tables.users.query({
+          dimensions: cohortQuery.dimensions,
+          measures: cohortQuery.measures,
+          filters: cohortQuery.filters,
+        });
+
+        const cohortConfig = generateRechartsConfig(cohortQuery, cohortData, semanticConfig);
+        cohortConfig.title = "Cohort Analysis (6 Months)";
+        cohortConfig.type = "line";
+
+        // Chart 3: Net Retention Analysis (Active vs Churned Customers)
+        const netRetentionQuery = {
+          table: "users" as const,
+          dimensions: ["is_active_30d"],
+          measures: ["user_count", "total_ltv"],
+          filters: ["is_paying_customer = TRUE"],
+          explanation: "Net retention: active vs inactive customers",
+        };
+
+        const netRetentionData = await tables.users.query({
+          dimensions: netRetentionQuery.dimensions,
+          measures: netRetentionQuery.measures,
+          filters: netRetentionQuery.filters,
+        });
+
+        // Transform for better display
+        const formattedNetRetention = netRetentionData.map((row) => ({
+          ...row,
+          status: row.is_active_30d ? "Active (30d)" : "Inactive (30d)",
+          is_active_30d: undefined,
+        }));
+
+        const netRetentionConfig = generateRechartsConfig(
+          { ...netRetentionQuery, dimensions: ["status"] },
+          formattedNetRetention,
+          semanticConfig,
+        );
+        netRetentionConfig.title = "Net Retention (Active vs Inactive)";
+        netRetentionConfig.type = "bar";
+
+        // Chart 4: LTV by Plan Tier
+        const ltvQuery = {
+          table: "users" as const,
+          dimensions: ["current_plan_tier"],
+          measures: ["user_count", "total_ltv"],
+          filters: ["current_plan_tier != ''"],
+          explanation: "Customer distribution and LTV by plan",
+        };
+
+        const ltvData = await tables.users.query({
+          dimensions: ltvQuery.dimensions,
+          measures: ltvQuery.measures,
+          filters: ltvQuery.filters,
+        });
+
+        const ltvConfig = generateRechartsConfig(ltvQuery, ltvData, semanticConfig);
+        ltvConfig.title = "LTV by Plan Tier";
+
+        // Chart 5: Engagement Distribution (Sessions per User)
+        const engagementQuery = {
+          table: "users" as const,
+          dimensions: ["current_plan_tier"],
+          measures: ["avg_sessions_per_user"],
+          filters: ["current_plan_tier != ''"],
+          explanation: "Average engagement by plan tier",
+        };
+
+        const engagementData = await tables.users.query({
+          dimensions: engagementQuery.dimensions,
+          measures: engagementQuery.measures,
+          filters: engagementQuery.filters,
+        });
+
+        const engagementConfig = generateRechartsConfig(
+          engagementQuery,
+          engagementData,
+          semanticConfig,
+        );
+
+        setCharts({
+          rfm: rfmConfig,
+          cohort: cohortConfig,
+          netRetention: netRetentionConfig,
+          ltv: ltvConfig,
+          engagement: engagementConfig,
+        });
       } catch (error) {
-        console.error("Failed to load dashboard:", error);
+        console.error("Failed to load users data:", error);
       } finally {
         setLoading(false);
       }
     }
 
-    loadDashboard();
+    loadData();
   }, [db]);
-
-  // Extract KPI values
-  const getKPIValue = (id: string, measure: string) => {
-    const kpi = kpiData[id];
-    if (!kpi || !kpi.data || kpi.data.length === 0) return 0;
-    return kpi.data[0]?.[measure] || 0;
-  };
-
-  const totalLTV = getKPIValue('users_total_revenue', 'total_ltv');
-  const totalCustomers = getKPIValue('users_total_customers', 'paying_customers');
-  
-  // Calculate retention metrics (convert BigInt to Number)
-  const retentionData = kpiData['users_retention']?.data || [];
-  const activeCustomers = Number(retentionData.find((r: any) => r.is_active_30d === true)?.user_count || 0);
-  const inactiveCustomers = Number(retentionData.find((r: any) => r.is_active_30d === false)?.user_count || 0);
-  const retentionRate = Number(totalCustomers) > 0 ? (activeCustomers / Number(totalCustomers)) * 100 : 0;
 
   return (
     <div class="space-y-6">
@@ -83,126 +177,120 @@ export default function UsersDashboard({ db }) {
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard
           title="Total LTV"
-          value={totalLTV}
+          value={kpiData.totalLTV || 0}
           format="currency"
           decimals={0}
-          description="Lifetime value across all users"
           loading={loading}
+          description="Lifetime value across all users"
         />
-        
+
         <KPICard
           title="Paying Customers"
-          value={totalCustomers}
+          value={kpiData.payingCustomers || 0}
           format="number"
+          loading={loading}
           description="Current paying customers"
-          loading={loading}
         />
-        
+
         <KPICard
-          title="Active Customers"
-          value={activeCustomers}
-          format="number"
-          description="Active in last 30 days"
+          title="Avg LTV per Customer"
+          value={kpiData.avgLTV || 0}
+          format="currency"
+          decimals={0}
           loading={loading}
+          description="Average customer value"
         />
-        
+
         <KPICard
-          title="Retention Rate"
-          value={retentionRate}
+          title="30-Day Retention"
+          value={kpiData.retentionRate || 0}
           format="percentage"
           decimals={1}
-          description="Active / Total paying customers"
           loading={loading}
+          description="Active in last 30 days"
         />
       </div>
-
-      {/* Net Retention Alert */}
-      {!loading && (
-        <div class={`border rounded-lg p-4 ${
-          retentionRate < 50 
-            ? 'bg-red-50 border-red-200' 
-            : retentionRate < 70 
-              ? 'bg-yellow-50 border-yellow-200'
-              : 'bg-green-50 border-green-200'
-        }`}>
-          <div class="font-semibold mb-1">
-            {retentionRate < 50 && '🚨 Critical: High Customer Churn'}
-            {retentionRate >= 50 && retentionRate < 70 && '⚠️ Warning: Moderate Churn'}
-            {retentionRate >= 70 && '✓ Healthy: Good Retention'}
-          </div>
-          <div class="text-sm">
-            {inactiveCustomers > 0 && (
-              <span>{inactiveCustomers} customers at risk of churning (inactive 30+ days)</span>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* Charts Grid */}
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* RFM Analysis */}
-        {chartData['rfm_analysis'] && (
-          <div class="lg:col-span-2">
-            <div class="bg-white rounded-lg shadow-md p-4 mb-2">
-              <h3 class="font-semibold mb-1">RFM Segmentation</h3>
-              <p class="text-sm text-gray-600">
-                Identify high-value customers and churn risks based on Recency (activity), 
-                Frequency (sessions), and Monetary (LTV) metrics
-              </p>
-            </div>
-            <PlotlyChart
-              data={chartData['rfm_analysis'].data}
-              layout={chartData['rfm_analysis'].layout}
-              loading={loading}
-            />
-          </div>
-        )}
-
-        {/* Cohort Retention */}
-        {chartData['cohort_retention'] && (
-          <div class="lg:col-span-2">
-            <div class="bg-white rounded-lg shadow-md p-4 mb-2">
-              <h3 class="font-semibold mb-1">Cohort Retention Analysis</h3>
-              <p class="text-sm text-gray-600">
-                Track retention rates by signup cohort to identify trends and optimize onboarding
-              </p>
-            </div>
-            <PlotlyChart
-              data={chartData['cohort_retention'].data}
-              layout={chartData['cohort_retention'].layout}
-              loading={loading}
-            />
-          </div>
-        )}
-
-        {/* Lifecycle Distribution */}
-        {chartData['lifecycle_distribution'] && (
-          <PlotlyChart
-            data={chartData['lifecycle_distribution'].data}
-            layout={chartData['lifecycle_distribution'].layout}
+        {charts.rfm && (
+          <RechartsWrapper
+            config={charts.rfm}
             loading={loading}
+            height={400}
           />
         )}
 
-        {/* LTV by Plan Tier */}
-        {chartData['ltv_by_plan'] && (
-          <PlotlyChart
-            data={chartData['ltv_by_plan'].data}
-            layout={chartData['ltv_by_plan'].layout}
+        {/* Net Retention Analysis */}
+        {charts.netRetention && (
+          <RechartsWrapper
+            config={charts.netRetention}
             loading={loading}
+            height={400}
           />
         )}
       </div>
 
-      {/* Action Items */}
-      <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
-        <h3 class="font-semibold text-purple-900 mb-2">Recommended Actions</h3>
-        <ul class="text-sm text-purple-800 space-y-1">
-          <li>• <strong>Re-engagement Campaign:</strong> Target inactive customers in RFM analysis before they churn</li>
-          <li>• <strong>Cohort Analysis:</strong> Identify which cohorts have best retention and replicate their onboarding</li>
-          <li>• <strong>Value Optimization:</strong> Focus on moving users from lower lifecycle stages to activation</li>
-          <li>• <strong>Plan Tier Expansion:</strong> Analyze LTV by tier to optimize pricing and upsell opportunities</li>
-        </ul>
+      {/* Full-width Cohort Analysis */}
+      <div class="w-full">
+        {charts.cohort && (
+          <RechartsWrapper
+            config={charts.cohort}
+            loading={loading}
+            height={350}
+          />
+        )}
+      </div>
+
+      {/* Additional Charts */}
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {charts.ltv && (
+          <RechartsWrapper
+            config={charts.ltv}
+            loading={loading}
+            height={350}
+          />
+        )}
+
+        {charts.engagement && (
+          <RechartsWrapper
+            config={charts.engagement}
+            loading={loading}
+            height={350}
+          />
+        )}
+      </div>
+
+      {/* Insights Section */}
+      <div class="bg-purple-50 border border-purple-200 rounded-lg p-6">
+        <h3 class="text-lg font-semibold text-purple-900 mb-3 flex items-center">
+          <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M10 3.5a1.5 1.5 0 013 0V4a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-.5a1.5 1.5 0 000 3h.5a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-.5a1.5 1.5 0 00-3 0v.5a1 1 0 01-1 1H6a1 1 0 01-1-1v-3a1 1 0 00-1-1h-.5a1.5 1.5 0 010-3H4a1 1 0 001-1V6a1 1 0 011-1h3a1 1 0 001-1v-.5z" />
+          </svg>
+          Key Insights
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-purple-800">
+          <div>
+            <p class="font-semibold mb-1">💎 RFM Segmentation</p>
+            <p>
+              Identify high-value customers by analyzing recency, frequency, and monetary value
+              patterns.
+            </p>
+          </div>
+          <div>
+            <p class="font-semibold mb-1">📈 Cohort Performance</p>
+            <p>
+              Track retention rates across user cohorts to identify trends and optimize onboarding.
+            </p>
+          </div>
+          <div>
+            <p class="font-semibold mb-1">🔒 Net Retention</p>
+            <p>
+              Monitor active vs churned customers to measure customer health and expansion revenue.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );

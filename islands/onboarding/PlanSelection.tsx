@@ -2,7 +2,7 @@
 import { useState } from "preact/hooks";
 
 interface PlanSelectionProps {
-  onSelectPlan: (plan: 'starter' | 'smarter') => void;
+  onSelectPlan: (plan: "starter" | "smarter") => void;
 }
 
 export default function PlanSelection({ onSelectPlan }: PlanSelectionProps) {
@@ -47,7 +47,7 @@ export default function PlanSelection({ onSelectPlan }: PlanSelectionProps) {
             </ul>
 
             <button
-              onClick={() => onSelectPlan('starter')}
+              onClick={() => onSelectPlan("starter")}
               class="w-full py-3 px-6 bg-gray-600 text-white rounded-lg font-semibold hover:bg-gray-700 transition-colors"
             >
               Start with Starter
@@ -94,7 +94,7 @@ export default function PlanSelection({ onSelectPlan }: PlanSelectionProps) {
             </ul>
 
             <button
-              onClick={() => onSelectPlan('smarter')}
+              onClick={() => onSelectPlan("smarter")}
               class="w-full py-3 px-6 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg"
             >
               Go Smarter with AI

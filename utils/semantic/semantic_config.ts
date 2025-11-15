@@ -58,17 +58,17 @@ export function getChartConfig(chartName: string): ChartConfig | undefined {
 // Optimized for 3B model - shorter, more focused prompt
 export function generateWebLLMPrompt(): string {
   const config = getSemanticConfig();
-  
+
   return `You are a data analyst. Generate query specs in JSON format ONLY.
 
 # Sessions Table (${config.sessions.table})
-Dimensions: ${Object.keys(config.sessions.dimensions).join(', ')}
-Measures: ${Object.keys(config.sessions.measures).join(', ')}
+Dimensions: ${Object.keys(config.sessions.dimensions).join(", ")}
+Measures: ${Object.keys(config.sessions.measures).join(", ")}
 Use cookie_id for unique counts (97% anonymous).
 
 # Users Table (${config.users.table})
-Dimensions: ${Object.keys(config.users.dimensions).join(', ')}
-Measures: ${Object.keys(config.users.measures).join(', ')}
+Dimensions: ${Object.keys(config.users.dimensions).join(", ")}
+Measures: ${Object.keys(config.users.measures).join(", ")}
 Use user_key for unique counts (97.65% anonymous).
 
 # Response Format (CRITICAL - JSON ONLY, NO MARKDOWN)

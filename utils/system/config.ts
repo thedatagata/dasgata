@@ -6,7 +6,7 @@ function getEnv(key: string, fallback = ""): string {
 
 export const config = {
   admin: {
-    email: getEnv("ADMIN_EMAIL", "thedatagata@gmail.com")
+    email: getEnv("ADMIN_EMAIL", "thedatagata@gmail.com"),
   },
   session: {
     secret: getEnv("SESSION_SECRET", "build-secret"),
@@ -16,5 +16,5 @@ export const config = {
   oauth: {
     googleClientId: getEnv("GOOGLE_CLIENT_ID"),
     googleClientSecret: getEnv("GOOGLE_CLIENT_SECRET"),
-  }
+  },
 };

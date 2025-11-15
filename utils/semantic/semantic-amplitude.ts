@@ -1,5 +1,5 @@
 // utils/semantic/semantic-amplitude.ts
-import { getModelConfig, type ModelConfig } from "./config.ts";
+import { getModelConfig, type ModelConfig } from "./semantic_config.ts";
 
 interface QuerySpec {
   dimensions?: string[];
@@ -13,22 +13,24 @@ export class SemanticTable {
 
   constructor(
     private db: any, // MDConnection
-    private modelName: "sessions" | "users"
+    private modelName: "sessions" | "users",
   ) {
     this.config = getModelConfig(modelName);
   }
 
   async query(opts: QuerySpec) {
     const selectCols = [
-      ...(opts.dimensions?.map(d => this.getDimensionSQL(d)) || []),
-      ...(opts.measures?.map(m => this.getMeasureSQL(m)) || [])
+      ...(opts.dimensions?.map((d) => this.getDimensionSQL(d)) || []),
+      ...(opts.measures?.map((m) => this.getMeasureSQL(m)) || []),
     ];
 
     const sql = `
       SELECT ${selectCols.join(", ")}
       FROM ${this.config.table}
       ${opts.filters?.length ? `WHERE ${opts.filters.join(" AND ")}` : ""}
-      ${opts.dimensions?.length ? `GROUP BY ${opts.dimensions.map((_, i) => i + 1).join(", ")}` : ""}
+      ${
+      opts.dimensions?.length ? `GROUP BY ${opts.dimensions.map((_, i) => i + 1).join(", ")}` : ""
+    }
       ${opts.limit ? `LIMIT ${opts.limit}` : ""}
     `;
 
@@ -39,7 +41,7 @@ export class SemanticTable {
   private getDimensionSQL(name: string): string {
     const dim = this.config.dimensions[name];
     if (!dim) throw new Error(`Unknown dimension: ${name}`);
-    
+
     if (dim.sql) {
       const sql = dim.sql.replace(/_\./g, this.config.table + ".");
       return `(${sql}) as ${name}`;
@@ -51,7 +53,7 @@ export class SemanticTable {
   private getMeasureSQL(name: string): string {
     const measure = this.config.measures[name];
     if (!measure) throw new Error(`Unknown measure: ${name}`);
-    
+
     const agg = measure.aggregation.replace(/_\./g, this.config.table + ".");
     return `(${agg}) as ${name}`;
   }
@@ -61,7 +63,7 @@ export class SemanticTable {
       table: this.config.table,
       description: this.config.description,
       dimensions: this.config.dimensions,
-      measures: this.config.measures
+      measures: this.config.measures,
     };
   }
 }
@@ -69,6 +71,6 @@ export class SemanticTable {
 export function createSemanticTables(db: any) {
   return {
     sessions: new SemanticTable(db, "sessions"),
-    users: new SemanticTable(db, "users")
+    users: new SemanticTable(db, "users"),
   };
 }
